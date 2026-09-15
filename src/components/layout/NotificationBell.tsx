@@ -5,44 +5,54 @@ import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import type { Notification } from "@/lib/store/types";
 import { useOutsideClick } from "@/lib/use-outside-click";
+import { createClient } from "@/lib/supabase/client";
 
-const POLL_MS = 4000;
-
-export function NotificationBell() {
+export function NotificationBell({ userId }: { userId: string }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState<Notification | null>(null);
-  const seenIds = useRef<Set<string> | null>(null);
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   useOutsideClick(ref, () => setOpen(false));
 
   useEffect(() => {
     let cancelled = false;
+    const supabase = createClient();
 
-    async function poll() {
+    async function loadInitial() {
       const res = await fetch("/api/notifications", { cache: "no-store" });
       if (!res.ok || cancelled) return;
       const { notifications: list } = (await res.json()) as { notifications: Notification[] };
-      if (cancelled) return;
-
-      if (seenIds.current === null) {
-        seenIds.current = new Set(list.map((n) => n.id));
-      } else {
-        const fresh = list.find((n) => !seenIds.current!.has(n.id) && !n.is_read);
-        if (fresh) setToast(fresh);
-        seenIds.current = new Set(list.map((n) => n.id));
-      }
-      setNotifications(list);
+      if (!cancelled) setNotifications(list);
     }
+    loadInitial();
 
-    poll();
-    const interval = setInterval(poll, POLL_MS);
+    // Realtime instead of polling: Postgres broadcasts new rows the moment
+    // they're inserted (comment notifications, brand decisions, stale-task
+    // reminders), scoped to this user by RLS + the filter below.
+    const channel = supabase
+      .channel(`notifications:${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${userId}`,
+        },
+        (payload) => {
+          const notification = payload.new as Notification;
+          setNotifications((prev) => [notification, ...prev]);
+          setToast(notification);
+        }
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (!toast) return;

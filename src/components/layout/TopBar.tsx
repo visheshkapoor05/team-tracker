@@ -21,7 +21,7 @@ export function TopBar({ currentUser }: { currentUser: Profile }) {
           <h1 className="text-lg font-semibold tracking-tight text-slate-900">Team Tracker</h1>
         </div>
         <div className="flex items-center gap-3">
-          <NotificationBell />
+          <NotificationBell userId={currentUser.id} />
           <UserMenu currentUser={currentUser} />
         </div>
       </div>
