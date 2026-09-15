@@ -37,6 +37,72 @@ const PALETTE = [
 ];
 const LEAVE_COLOR = "#94A3B8";
 
+type AllocationSummary = {
+  totalWorkingHours: number;
+  projectTotals: { name: string; hours: number }[];
+  brandAllocationRows: { name: string; hours: number; pct: number }[];
+  totalBrandHours: number;
+  totalLeaveHours: number;
+  benchHours: number;
+};
+
+function summarizeAllocation({
+  profileIds,
+  monthEntries,
+  monthLeaves,
+  tasksById,
+  workingHoursByProfile,
+  brandName,
+  projectName,
+}: {
+  profileIds: Set<string>;
+  monthEntries: TaskDailyEntry[];
+  monthLeaves: Leave[];
+  tasksById: Record<string, Task>;
+  workingHoursByProfile: Record<string, number>;
+  brandName: (id: string) => string;
+  projectName: (id: string) => string;
+}): AllocationSummary {
+  const relevantEntries = monthEntries.filter((e) => {
+    const task = tasksById[e.task_id];
+    return task && profileIds.has(task.owner_id);
+  });
+  const relevantLeaves = monthLeaves.filter((l) => profileIds.has(l.profile_id));
+
+  const totalWorkingHours = Array.from(profileIds).reduce(
+    (sum, id) => sum + (workingHoursByProfile[id] ?? 0),
+    0
+  );
+
+  const projectMap: Record<string, number> = {};
+  const brandHoursMap: Record<string, number> = {};
+  for (const e of relevantEntries) {
+    const task = tasksById[e.task_id];
+    if (!task) continue;
+    projectMap[task.project_id] = (projectMap[task.project_id] ?? 0) + e.hours;
+    brandHoursMap[task.brand_id] = (brandHoursMap[task.brand_id] ?? 0) + e.hours;
+  }
+  const projectTotals = Object.entries(projectMap)
+    .map(([id, hours]) => ({ name: projectName(id), hours }))
+    .sort((a, b) => b.hours - a.hours);
+
+  const totalLeaveHours = relevantLeaves.reduce((sum, l) => sum + l.hours, 0);
+  const totalBrandHours = Object.values(brandHoursMap).reduce((sum, h) => sum + h, 0);
+  const benchHours = Math.max(0, totalWorkingHours - totalBrandHours - totalLeaveHours);
+
+  const brandRows = Object.entries(brandHoursMap)
+    .map(([id, hours]) => ({ name: brandName(id), hours }))
+    .sort((a, b) => b.hours - a.hours);
+  brandRows.push({ name: "Leave", hours: totalLeaveHours });
+  brandRows.push({ name: "Bench", hours: benchHours });
+  const brandAllocationRows = brandRows.map((r) => ({
+    ...r,
+    pct: totalWorkingHours > 0 ? Math.round((r.hours / totalWorkingHours) * 1000) / 10 : 0,
+  }));
+
+  return { totalWorkingHours, projectTotals, brandAllocationRows, totalBrandHours, totalLeaveHours, benchHours };
+}
+
 export function AllocationBoard({
   currentUser,
   projects,
@@ -70,11 +136,9 @@ export function AllocationBoard({
 
   const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}`;
 
-  // Only the people this viewer can actually see — an employee only ever
-  // has their own tasks in `tasks`, so scoping the roster the same way keeps
-  // the team-wide totals below consistent with what's actually visible.
-  const visibleProfiles =
-    currentUser.role === "employee" ? profiles.filter((p) => p.id === currentUser.id) : profiles;
+  // Managers and leads additionally get a team-wide view below their own —
+  // everyone else only ever sees their own personal dashboard.
+  const canViewAll = currentUser.role === "manager" || currentUser.role === "lead";
 
   const holidaysByOffice = useMemo(() => {
     const map: Record<string, Set<string>> = {};
@@ -94,17 +158,12 @@ export function AllocationBoard({
   // calendar, not one shared company-wide number.
   const workingHoursByProfile = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const p of visibleProfiles) {
+    for (const p of profiles) {
       const holidaySet = (p.office_id && holidaysByOffice[p.office_id]) || new Set<string>();
       map[p.id] = workingDaysInMonth(year, month, holidaySet) * 8;
     }
     return map;
-  }, [visibleProfiles, holidaysByOffice, year, month]);
-
-  const teamTotalWorkingHours = useMemo(
-    () => Object.values(workingHoursByProfile).reduce((sum, h) => sum + h, 0),
-    [workingHoursByProfile]
-  );
+  }, [profiles, holidaysByOffice, year, month]);
 
   const tasksById = useMemo(() => {
     const map: Record<string, Task> = {};
@@ -130,57 +189,42 @@ export function AllocationBoard({
     [leaves, monthPrefix]
   );
 
-  const projectTotals = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const e of monthEntries) {
-      const task = tasksById[e.task_id];
-      if (!task) continue;
-      map[task.project_id] = (map[task.project_id] ?? 0) + e.hours;
-    }
-    return Object.entries(map)
-      .map(([projectId, hours]) => ({ name: projectName(projectId), hours }))
-      .sort((a, b) => b.hours - a.hours);
-  }, [monthEntries, tasksById, projectName]);
-
-  const brandHoursMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const e of monthEntries) {
-      const task = tasksById[e.task_id];
-      if (!task) continue;
-      map[task.brand_id] = (map[task.brand_id] ?? 0) + e.hours;
-    }
-    return map;
-  }, [monthEntries, tasksById]);
-
-  const totalLeaveHours = useMemo(
-    () => monthLeaves.reduce((sum, l) => sum + l.hours, 0),
-    [monthLeaves]
+  // My own allocation — always self-scoped, for every role.
+  const selfSummary = useMemo(
+    () =>
+      summarizeAllocation({
+        profileIds: new Set([currentUser.id]),
+        monthEntries,
+        monthLeaves,
+        tasksById,
+        workingHoursByProfile,
+        brandName,
+        projectName,
+      }),
+    [currentUser.id, monthEntries, monthLeaves, tasksById, workingHoursByProfile, brandName, projectName]
   );
-  const totalBrandHours = useMemo(
-    () => Object.values(brandHoursMap).reduce((sum, h) => sum + h, 0),
-    [brandHoursMap]
-  );
-  const benchHours = Math.max(0, teamTotalWorkingHours - totalBrandHours - totalLeaveHours);
 
-  // Brand-level allocation: every brand + a Leave row + an auto-computed
-  // Bench row (whatever's left of the team's working hours once real work
-  // and leave are accounted for), all as a % of team total working hours.
-  const brandAllocationRows = useMemo(() => {
-    const rows = Object.entries(brandHoursMap)
-      .map(([brandId, hours]) => ({ name: brandName(brandId), hours }))
-      .sort((a, b) => b.hours - a.hours);
-    rows.push({ name: "Leave", hours: totalLeaveHours });
-    rows.push({ name: "Bench", hours: benchHours });
-    return rows.map((r) => ({
-      ...r,
-      pct: teamTotalWorkingHours > 0 ? Math.round((r.hours / teamTotalWorkingHours) * 1000) / 10 : 0,
-    }));
-  }, [brandHoursMap, brandName, totalLeaveHours, benchHours, teamTotalWorkingHours]);
+  // Whole-team allocation — only computed/shown for managers and leads.
+  const teamSummary = useMemo(
+    () =>
+      canViewAll
+        ? summarizeAllocation({
+            profileIds: new Set(profiles.map((p) => p.id)),
+            monthEntries,
+            monthLeaves,
+            tasksById,
+            workingHoursByProfile,
+            brandName,
+            projectName,
+          })
+        : null,
+    [canViewAll, profiles, monthEntries, monthLeaves, tasksById, workingHoursByProfile, brandName, projectName]
+  );
 
   const brandKeys = useMemo(() => brands.map((b) => b.name), [brands]);
 
   const employeeRows = useMemo(() => {
-    return visibleProfiles.map((profile) => {
+    return profiles.map((profile) => {
       const perBrand: Record<string, number> = {};
       let total = 0;
       for (const e of monthEntries) {
@@ -210,7 +254,7 @@ export function AllocationBoard({
         },
       };
     });
-  }, [visibleProfiles, monthEntries, monthLeaves, tasksById, brandName, workingHoursByProfile]);
+  }, [profiles, monthEntries, monthLeaves, tasksById, brandName, workingHoursByProfile]);
 
   // Employee x Project and Employee x Brand pivots — each employee's own
   // breakdown, not just the team-wide aggregates above.
@@ -246,7 +290,7 @@ export function AllocationBoard({
   );
 
   const employeeHolidayRows = useMemo(() => {
-    return visibleProfiles.map((profile) => {
+    return profiles.map((profile) => {
       const office = profile.office_id ? officesById[profile.office_id] : undefined;
       const holidaySet = (profile.office_id && holidaysByOffice[profile.office_id]) || new Set<string>();
       const datesThisMonth = holidays
@@ -254,7 +298,7 @@ export function AllocationBoard({
         .sort((a, b) => a.holiday_date.localeCompare(b.holiday_date));
       return { profile, office, datesThisMonth, count: holidaySet.size };
     });
-  }, [visibleProfiles, officesById, holidaysByOffice, holidays, monthPrefix]);
+  }, [profiles, officesById, holidaysByOffice, holidays, monthPrefix]);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
@@ -284,146 +328,164 @@ export function AllocationBoard({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Team working hours" value={`${teamTotalWorkingHours}h`} />
-        <StatCard label="Logged + leave hours" value={`${totalBrandHours + totalLeaveHours}h`} />
-        <StatCard label="Bench hours" value={`${benchHours}h`} />
+      <div>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          My allocation
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard label="My working hours" value={`${selfSummary.totalWorkingHours}h`} />
+          <StatCard
+            label="My logged + leave hours"
+            value={`${selfSummary.totalBrandHours + selfSummary.totalLeaveHours}h`}
+          />
+          <StatCard label="My bench hours" value={`${selfSummary.benchHours}h`} />
+        </div>
       </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold text-slate-800">Project-wise allocation</h2>
-        <TotalsTable rows={projectTotals} emptyLabel="No hours logged yet this month." />
+        <h2 className="mb-3 text-sm font-semibold text-slate-800">My project-wise allocation</h2>
+        <TotalsTable rows={selfSummary.projectTotals} emptyLabel="No hours logged yet this month." />
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-1 text-sm font-semibold text-slate-800">Brand-wise allocation</h2>
+        <h2 className="mb-1 text-sm font-semibold text-slate-800">My brand-wise allocation</h2>
         <p className="mb-4 text-xs text-slate-400">
-          Every brand plus Leave, as a % of {teamTotalWorkingHours}h team working hours this
-          month. Bench is auto-computed as whatever&apos;s left over — it isn&apos;t a real
+          Every brand plus Leave, as a % of your {selfSummary.totalWorkingHours}h working hours
+          this month. Bench is auto-computed as whatever&apos;s left over — it isn&apos;t a real
           selectable brand.
         </p>
-        <div className="overflow-hidden rounded-lg border border-slate-100">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
-              <tr>
-                <th className="px-3 py-2 text-left">Brand</th>
-                <th className="px-3 py-2 text-right">Hours</th>
-                <th className="px-3 py-2 text-right">% of month</th>
-              </tr>
-            </thead>
-            <tbody>
-              {brandAllocationRows.map((r) => (
-                <tr
-                  key={r.name}
-                  className={`border-t border-slate-100 ${
-                    r.name === "Bench" ? "text-slate-400" : "text-slate-700"
-                  }`}
-                >
-                  <td className="px-3 py-2 font-medium">{r.name}</td>
-                  <td className="px-3 py-2 text-right">{r.hours}</td>
-                  <td className="px-3 py-2 text-right font-medium">{r.pct}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AllocationTable rows={selfSummary.brandAllocationRows} />
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-1 text-sm font-semibold text-slate-800">Per-employee breakdown</h2>
-        <p className="mb-4 text-xs text-slate-400">
-          Hours by brand plus leave, as a % of each person&apos;s own working hours this month
-          (which depends on their office&apos;s holiday calendar).
-        </p>
-        <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={employeeRows.map((r) => r.chartRow)} layout="vertical" margin={{ left: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" />
-              <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Leave" stackId="a" fill={LEAVE_COLOR} />
-              {brandKeys.map((name, i) => (
-                <Bar key={name} dataKey={name} stackId="a" fill={PALETTE[i % PALETTE.length]} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      {canViewAll && teamSummary && (
+        <>
+          <div className="mt-2 border-t border-slate-200 pt-6">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Team overview (all employees)
+            </h2>
+          </div>
 
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-100">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
-              <tr>
-                <th className="px-3 py-2 text-left">Employee</th>
-                <th className="px-3 py-2 text-right">Leave (h)</th>
-                <th className="px-3 py-2 text-right">Total (h)</th>
-                <th className="px-3 py-2 text-right">Working hours</th>
-                <th className="px-3 py-2 text-right">% of month</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employeeRows.map((row) => (
-                <tr key={row.profile.id} className="border-t border-slate-100">
-                  <td className="px-3 py-2 font-medium text-slate-700">{row.profile.full_name}</td>
-                  <td className="px-3 py-2 text-right text-slate-500">{row.leaveHours}</td>
-                  <td className="px-3 py-2 text-right text-slate-500">{row.total}</td>
-                  <td className="px-3 py-2 text-right text-slate-500">{row.workingHours}</td>
-                  <td className="px-3 py-2 text-right font-medium text-slate-700">{row.pct}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Team working hours" value={`${teamSummary.totalWorkingHours}h`} />
+            <StatCard
+              label="Logged + leave hours"
+              value={`${teamSummary.totalBrandHours + teamSummary.totalLeaveHours}h`}
+            />
+            <StatCard label="Bench hours" value={`${teamSummary.benchHours}h`} />
+          </div>
 
-      <EmployeeAllocationMatrix
-        title="Employee-wise project allocation"
-        description="Hours each employee logged per project this month."
-        employees={visibleProfiles}
-        columns={projectColumns}
-        hoursByEmployeeAndColumn={employeeProjectHours}
-      />
+          <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="mb-3 text-sm font-semibold text-slate-800">Project-wise allocation</h2>
+            <TotalsTable rows={teamSummary.projectTotals} emptyLabel="No hours logged yet this month." />
+          </section>
 
-      <EmployeeAllocationMatrix
-        title="Employee-wise brand allocation"
-        description="Hours each employee logged per brand this month — scroll sideways if there are many brands."
-        employees={visibleProfiles}
-        columns={brandColumns}
-        hoursByEmployeeAndColumn={employeeBrandHours}
-      />
+          <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="mb-1 text-sm font-semibold text-slate-800">Brand-wise allocation</h2>
+            <p className="mb-4 text-xs text-slate-400">
+              Every brand plus Leave, as a % of {teamSummary.totalWorkingHours}h team working
+              hours this month. Bench is auto-computed as whatever&apos;s left over — it
+              isn&apos;t a real selectable brand.
+            </p>
+            <AllocationTable rows={teamSummary.brandAllocationRows} />
+          </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-1 text-sm font-semibold text-slate-800">Employee Holidays</h2>
-        <p className="mb-4 text-xs text-slate-400">
-          Auto-derived from each employee&apos;s office — no manual per-employee setup. Manage the
-          underlying office holiday calendar from Admin.
-        </p>
-        <div className="overflow-hidden rounded-lg border border-slate-100">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
-              <tr>
-                <th className="px-3 py-2 text-left">Employee</th>
-                <th className="px-3 py-2 text-left">Office</th>
-                <th className="px-3 py-2 text-left">Holidays this month</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employeeHolidayRows.map((row) => (
-                <tr key={row.profile.id} className="border-t border-slate-100">
-                  <td className="px-3 py-2 font-medium text-slate-700">{row.profile.full_name}</td>
-                  <td className="px-3 py-2 text-slate-500">{row.office?.name ?? "Unassigned"}</td>
-                  <td className="px-3 py-2 text-slate-500">
-                    {row.datesThisMonth.length === 0
-                      ? "None"
-                      : row.datesThisMonth.map((h) => `${h.holiday_date.slice(8)} (${h.label})`).join(", ")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="mb-1 text-sm font-semibold text-slate-800">Per-employee breakdown</h2>
+            <p className="mb-4 text-xs text-slate-400">
+              Hours by brand plus leave, as a % of each person&apos;s own working hours this month
+              (which depends on their office&apos;s holiday calendar).
+            </p>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={employeeRows.map((r) => r.chartRow)} layout="vertical" margin={{ left: 24 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" />
+                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="Leave" stackId="a" fill={LEAVE_COLOR} />
+                  {brandKeys.map((name, i) => (
+                    <Bar key={name} dataKey={name} stackId="a" fill={PALETTE[i % PALETTE.length]} />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-lg border border-slate-100">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Employee</th>
+                    <th className="px-3 py-2 text-right">Leave (h)</th>
+                    <th className="px-3 py-2 text-right">Total (h)</th>
+                    <th className="px-3 py-2 text-right">Working hours</th>
+                    <th className="px-3 py-2 text-right">% of month</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeeRows.map((row) => (
+                    <tr key={row.profile.id} className="border-t border-slate-100">
+                      <td className="px-3 py-2 font-medium text-slate-700">{row.profile.full_name}</td>
+                      <td className="px-3 py-2 text-right text-slate-500">{row.leaveHours}</td>
+                      <td className="px-3 py-2 text-right text-slate-500">{row.total}</td>
+                      <td className="px-3 py-2 text-right text-slate-500">{row.workingHours}</td>
+                      <td className="px-3 py-2 text-right font-medium text-slate-700">{row.pct}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <EmployeeAllocationMatrix
+            title="Employee-wise project allocation"
+            description="Hours each employee logged per project this month."
+            employees={profiles}
+            columns={projectColumns}
+            hoursByEmployeeAndColumn={employeeProjectHours}
+          />
+
+          <EmployeeAllocationMatrix
+            title="Employee-wise brand allocation"
+            description="Hours each employee logged per brand this month — scroll sideways if there are many brands."
+            employees={profiles}
+            columns={brandColumns}
+            hoursByEmployeeAndColumn={employeeBrandHours}
+          />
+
+          <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="mb-1 text-sm font-semibold text-slate-800">Employee Holidays</h2>
+            <p className="mb-4 text-xs text-slate-400">
+              Auto-derived from each employee&apos;s office — no manual per-employee setup. Manage
+              the underlying office holiday calendar from Admin.
+            </p>
+            <div className="overflow-hidden rounded-lg border border-slate-100">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Employee</th>
+                    <th className="px-3 py-2 text-left">Office</th>
+                    <th className="px-3 py-2 text-left">Holidays this month</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeeHolidayRows.map((row) => (
+                    <tr key={row.profile.id} className="border-t border-slate-100">
+                      <td className="px-3 py-2 font-medium text-slate-700">{row.profile.full_name}</td>
+                      <td className="px-3 py-2 text-slate-500">{row.office?.name ?? "Unassigned"}</td>
+                      <td className="px-3 py-2 text-slate-500">
+                        {row.datesThisMonth.length === 0
+                          ? "None"
+                          : row.datesThisMonth.map((h) => `${h.holiday_date.slice(8)} (${h.label})`).join(", ")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 }
@@ -464,6 +526,36 @@ function TotalsTable({
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function AllocationTable({ rows }: { rows: { name: string; hours: number; pct: number }[] }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-slate-100">
+      <table className="w-full text-sm">
+        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+          <tr>
+            <th className="px-3 py-2 text-left">Brand</th>
+            <th className="px-3 py-2 text-right">Hours</th>
+            <th className="px-3 py-2 text-right">% of month</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr
+              key={r.name}
+              className={`border-t border-slate-100 ${
+                r.name === "Bench" ? "text-slate-400" : "text-slate-700"
+              }`}
+            >
+              <td className="px-3 py-2 font-medium">{r.name}</td>
+              <td className="px-3 py-2 text-right">{r.hours}</td>
+              <td className="px-3 py-2 text-right font-medium">{r.pct}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
