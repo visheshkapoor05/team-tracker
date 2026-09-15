@@ -18,7 +18,7 @@ import { NewProjectModal } from "./NewProjectModal";
 import { CommentsPanel } from "./CommentsPanel";
 import { TrackerViewSelector } from "./TrackerViewSelector";
 import { DAY_WIDTH } from "./DateCell";
-import { META_TOTAL_WIDTH, META_COLUMNS } from "./gridConstants";
+import { META_TOTAL_WIDTH, META_COLUMNS, dayTintClass } from "./gridConstants";
 import type { DayInfo } from "./TaskRow";
 
 export function TrackerBoard({
@@ -85,21 +85,9 @@ export function TrackerBoard({
     return () => window.removeEventListener("open-task-comments", handler);
   }, [tasks]);
 
-  const days: DayInfo[] = useMemo(() => {
-    const total = daysInMonth(year, month);
-    const list: DayInfo[] = [];
-    for (let day = 1; day <= total; day++) {
-      list.push({
-        key: dateKey(year, month, day),
-        day,
-        isWeekend: isWeekend(year, month, day),
-      });
-    }
-    return list;
-  }, [year, month]);
-
-  // Holidays are per-office, so each employee sees their own office's dates
-  // tinted (purple), not a single shared "holiday column" for everyone.
+  // Holidays are per-office; the tracker only ever shows one person's tasks
+  // at a time (their own, or whoever is being viewed), so "is this date a
+  // holiday/leave" resolves to a single unambiguous answer per date.
   const holidaysByOffice = useMemo(() => {
     const map: Record<string, Set<string>> = {};
     for (const h of holidays) {
@@ -109,13 +97,39 @@ export function TrackerBoard({
     return map;
   }, [holidays]);
 
-  const holidayDatesByProfile = useMemo(() => {
-    const map: Record<string, Set<string>> = {};
-    for (const p of profiles) {
-      map[p.id] = (p.office_id && holidaysByOffice[p.office_id]) || new Set<string>();
+  const viewingProfile = useMemo(
+    () => profiles.find((p) => p.id === viewingProfileId),
+    [profiles, viewingProfileId]
+  );
+
+  const viewedHolidayDates = useMemo(
+    () => (viewingProfile?.office_id && holidaysByOffice[viewingProfile.office_id]) || new Set<string>(),
+    [viewingProfile, holidaysByOffice]
+  );
+
+  const viewedLeaveDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const l of leaves) {
+      if (l.profile_id === viewingProfileId) set.add(l.leave_date);
     }
-    return map;
-  }, [profiles, holidaysByOffice]);
+    return set;
+  }, [leaves, viewingProfileId]);
+
+  const days: DayInfo[] = useMemo(() => {
+    const total = daysInMonth(year, month);
+    const list: DayInfo[] = [];
+    for (let day = 1; day <= total; day++) {
+      const key = dateKey(year, month, day);
+      list.push({
+        key,
+        day,
+        isWeekend: isWeekend(year, month, day),
+        isHoliday: viewedHolidayDates.has(key),
+        isLeave: viewedLeaveDates.has(key),
+      });
+    }
+    return list;
+  }, [year, month, viewedHolidayDates, viewedLeaveDates]);
 
   const entriesByTask = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
@@ -125,15 +139,6 @@ export function TrackerBoard({
     }
     return map;
   }, [entries]);
-
-  const leavesByProfile = useMemo(() => {
-    const map: Record<string, Set<string>> = {};
-    for (const l of leaves) {
-      if (!map[l.profile_id]) map[l.profile_id] = new Set();
-      map[l.profile_id].add(l.leave_date);
-    }
-    return map;
-  }, [leaves]);
 
   const profilesById = useMemo(() => {
     const map: Record<string, Profile> = {};
@@ -325,11 +330,9 @@ export function TrackerBoard({
               {days.map((d) => (
                 <div
                   key={d.key}
-                  className={`flex h-full shrink-0 items-center justify-center border-r border-slate-100 text-xs font-medium text-slate-500 ${
-                    d.isWeekend ? "col-weekend" : ""
-                  }`}
+                  className={`flex h-full shrink-0 items-center justify-center border-r border-slate-100 text-xs font-medium text-slate-500 ${dayTintClass(d)}`}
                   style={{ width: DAY_WIDTH }}
-                  title={d.isWeekend ? "Weekend" : undefined}
+                  title={d.isLeave ? "Leave" : d.isHoliday ? "Holiday" : d.isWeekend ? "Weekend" : undefined}
                 >
                   {d.day}
                 </div>
@@ -352,8 +355,6 @@ export function TrackerBoard({
               days={days}
               currentUser={currentUser}
               entriesByTask={entriesByTask}
-              leavesByProfile={leavesByProfile}
-              holidayDatesByProfile={holidayDatesByProfile}
               commentCounts={commentCounts}
               canCreateTask={canCreateForViewedPerson}
               onUpdateTask={updateTask}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import type { Brand } from "@/lib/store/types";
 
@@ -27,6 +27,7 @@ export function BrandRegistry({
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
+  const addingRef = useRef(false);
 
   const sorted = [...brands].sort((a, b) => a.name.localeCompare(b.name));
 
@@ -62,7 +63,8 @@ export function BrandRegistry({
   }
 
   async function addNew() {
-    if (!newName.trim()) return;
+    if (!newName.trim() || addingRef.current) return;
+    addingRef.current = true;
     setAdding(true);
     setError(null);
     try {
@@ -71,6 +73,7 @@ export function BrandRegistry({
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add brand");
     } finally {
+      addingRef.current = false;
       setAdding(false);
     }
   }

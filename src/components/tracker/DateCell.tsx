@@ -55,7 +55,7 @@ export function DateCell({
       onMouseLeave={() => setHover(false)}
     >
       {isLeave ? (
-        <span className="text-[10px] font-medium text-red-700">Leave</span>
+        <span className="text-[10px] font-medium text-orange-700">Leave</span>
       ) : (
         <input
           disabled={!editable}

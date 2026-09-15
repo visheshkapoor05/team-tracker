@@ -11,6 +11,11 @@ export interface DayInfo {
   key: string;
   day: number;
   isWeekend: boolean;
+  // Scoped to whichever person's tracker is currently being viewed — the
+  // grid always shows exactly one person's tasks at a time, so this is
+  // unambiguous across every row.
+  isHoliday: boolean;
+  isLeave: boolean;
 }
 
 export function TaskRow({
@@ -18,8 +23,6 @@ export function TaskRow({
   brands,
   days,
   hoursByDate,
-  leaveDates,
-  holidayDates,
   canEdit,
   canToggleLeave,
   commentCount,
@@ -33,8 +36,6 @@ export function TaskRow({
   brands: Brand[];
   days: DayInfo[];
   hoursByDate: Record<string, number>;
-  leaveDates: Set<string>;
-  holidayDates: Set<string>;
   canEdit: boolean;
   canToggleLeave: boolean;
   commentCount: number;
@@ -122,10 +123,10 @@ export function TaskRow({
           <DateCell
             key={d.key}
             hours={hoursByDate[d.key]}
-            isLeave={leaveDates.has(d.key)}
+            isLeave={d.isLeave}
             isWeekend={d.isWeekend}
-            isHoliday={holidayDates.has(d.key)}
-            editable={canEdit && !leaveDates.has(d.key)}
+            isHoliday={d.isHoliday}
+            editable={canEdit && !d.isLeave}
             canToggleLeave={canToggleLeave}
             onChangeHours={(h) => onChangeHours(d.key, h)}
             onToggleLeave={() => onToggleLeave(d.key)}

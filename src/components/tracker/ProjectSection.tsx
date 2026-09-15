@@ -6,7 +6,7 @@ import type { Brand, Profile, Task } from "@/lib/store/types";
 import { TaskRow, type DayInfo } from "./TaskRow";
 import { NewTaskRow } from "./NewTaskRow";
 import { DAY_WIDTH } from "./DateCell";
-import { META_TOTAL_WIDTH } from "./gridConstants";
+import { META_TOTAL_WIDTH, dayTintClass } from "./gridConstants";
 
 export function ProjectSection({
   projectName,
@@ -15,8 +15,6 @@ export function ProjectSection({
   days,
   currentUser,
   entriesByTask,
-  leavesByProfile,
-  holidayDatesByProfile,
   commentCounts,
   canCreateTask,
   onUpdateTask,
@@ -32,8 +30,6 @@ export function ProjectSection({
   days: DayInfo[];
   currentUser: Profile;
   entriesByTask: Record<string, Record<string, number>>;
-  leavesByProfile: Record<string, Set<string>>;
-  holidayDatesByProfile: Record<string, Set<string>>;
   commentCounts: Record<string, number>;
   canCreateTask: boolean;
   onUpdateTask: (taskId: string, patch: Partial<Task>) => void;
@@ -75,9 +71,7 @@ export function ProjectSection({
             return (
               <div
                 key={d.key}
-                className={`flex h-full items-center justify-center border-r border-indigo-200/60 text-xs font-medium text-indigo-800 ${
-                  d.isWeekend ? "col-weekend" : ""
-                }`}
+                className={`flex h-full items-center justify-center border-r border-indigo-200/60 text-xs font-medium text-indigo-800 ${dayTintClass(d)}`}
                 style={{ width: DAY_WIDTH }}
               >
                 {total > 0 ? total : ""}
@@ -96,8 +90,6 @@ export function ProjectSection({
               brands={brands}
               days={days}
               hoursByDate={entriesByTask[task.id] ?? {}}
-              leaveDates={leavesByProfile[task.owner_id] ?? new Set()}
-              holidayDates={holidayDatesByProfile[task.owner_id] ?? new Set()}
               canEdit={task.owner_id === currentUser.id || canManage}
               canToggleLeave={task.owner_id === currentUser.id || canManage}
               commentCount={commentCounts[task.id] ?? 0}

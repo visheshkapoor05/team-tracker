@@ -118,11 +118,37 @@ export async function listBrands(): Promise<Brand[]> {
   return data ?? [];
 }
 
+// Belt-and-suspenders against double-submits (slow network + no visible
+// loading state can make an impatient user click twice for real, seconds
+// apart — this isn't just a sub-millisecond race). If the same person just
+// created a brand with this exact name, reuse it instead of inserting again.
+async function findRecentDuplicateBrand(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  name: string,
+  requestedBy: string
+): Promise<Brand | null> {
+  const cutoff = new Date(Date.now() - 15_000).toISOString();
+  const { data } = await supabase
+    .from("brands")
+    .select("*")
+    .eq("requested_by", requestedBy)
+    .ilike("name", name)
+    .gte("created_at", cutoff)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ?? null;
+}
+
 export async function requestBrand(actingUser: Profile, name: string): Promise<Brand> {
+  const trimmedName = name.trim();
   const supabase = await createClient();
+  const duplicate = await findRecentDuplicateBrand(supabase, trimmedName, actingUser.id);
+  if (duplicate) return duplicate;
+
   const { data, error } = await supabase
     .from("brands")
-    .insert({ name: name.trim(), status: "pending", requested_by: actingUser.id })
+    .insert({ name: trimmedName, status: "pending", requested_by: actingUser.id })
     .select()
     .single();
   const brand = single(data, error);
@@ -199,6 +225,9 @@ export async function addApprovedBrand(actingUser: Profile, name: string): Promi
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Brand name is required");
   const supabase = await createClient();
+  const duplicate = await findRecentDuplicateBrand(supabase, trimmed, actingUser.id);
+  if (duplicate) return duplicate;
+
   const { data, error } = await supabase
     .from("brands")
     .insert({ name: trimmed, status: "approved", requested_by: actingUser.id, approved_by: actingUser.id })

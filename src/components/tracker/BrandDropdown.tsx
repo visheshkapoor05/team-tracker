@@ -20,8 +20,12 @@ export function BrandDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [newName, setNewName] = useState("");
   const ref = useRef<HTMLButtonElement>(null);
+  // React state updates aren't synchronous, so a plain `disabled={submitting}`
+  // still leaves a gap between click and re-render. This ref closes it.
+  const submittingRef = useRef(false);
 
   const approved = brands.filter((b) => b.status === "approved");
   const current = brands.find((b) => b.id === value);
@@ -34,10 +38,17 @@ export function BrandDropdown({
 
   async function submitNew() {
     const name = newName.trim();
-    if (!name) return;
-    const id = await onRequestNew(name);
-    close();
-    if (id) onChange(id);
+    if (!name || submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    try {
+      const id = await onRequestNew(name);
+      close();
+      if (id) onChange(id);
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -86,17 +97,19 @@ export function BrandDropdown({
           <div className="flex items-center gap-1 px-2 py-1.5">
             <input
               autoFocus
+              disabled={submitting}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitNew()}
               placeholder="Brand name"
-              className="w-full rounded border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-indigo-400"
+              className="w-full rounded border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-indigo-400 disabled:opacity-60"
             />
             <button
               onClick={submitNew}
-              className="shrink-0 rounded bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700"
+              disabled={submitting || !newName.trim()}
+              className="shrink-0 rounded bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
             >
-              Add
+              {submitting ? "Adding…" : "Add"}
             </button>
           </div>
         )}

@@ -23,6 +23,7 @@ import type {
   TaskDailyEntry,
 } from "@/lib/store/types";
 import { monthLabel, workingDaysInMonth } from "@/lib/dates";
+import { EmployeeAllocationMatrix } from "./EmployeeAllocationMatrix";
 
 const PALETTE = [
   "#6366F1",
@@ -211,6 +212,39 @@ export function AllocationBoard({
     });
   }, [visibleProfiles, monthEntries, monthLeaves, tasksById, brandName, workingHoursByProfile]);
 
+  // Employee x Project and Employee x Brand pivots — each employee's own
+  // breakdown, not just the team-wide aggregates above.
+  const employeeProjectHours = useMemo(() => {
+    const map: Record<string, Record<string, number>> = {};
+    for (const e of monthEntries) {
+      const task = tasksById[e.task_id];
+      if (!task) continue;
+      const row = (map[task.owner_id] ??= {});
+      row[task.project_id] = (row[task.project_id] ?? 0) + e.hours;
+    }
+    return map;
+  }, [monthEntries, tasksById]);
+
+  const employeeBrandHours = useMemo(() => {
+    const map: Record<string, Record<string, number>> = {};
+    for (const e of monthEntries) {
+      const task = tasksById[e.task_id];
+      if (!task) continue;
+      const row = (map[task.owner_id] ??= {});
+      row[task.brand_id] = (row[task.brand_id] ?? 0) + e.hours;
+    }
+    return map;
+  }, [monthEntries, tasksById]);
+
+  const projectColumns = useMemo(
+    () => [...projects].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name })),
+    [projects]
+  );
+  const brandColumns = useMemo(
+    () => [...brands].sort((a, b) => a.name.localeCompare(b.name)).map((b) => ({ id: b.id, name: b.name })),
+    [brands]
+  );
+
   const employeeHolidayRows = useMemo(() => {
     return visibleProfiles.map((profile) => {
       const office = profile.office_id ? officesById[profile.office_id] : undefined;
@@ -342,6 +376,22 @@ export function AllocationBoard({
           </table>
         </div>
       </section>
+
+      <EmployeeAllocationMatrix
+        title="Employee-wise project allocation"
+        description="Hours each employee logged per project this month."
+        employees={visibleProfiles}
+        columns={projectColumns}
+        hoursByEmployeeAndColumn={employeeProjectHours}
+      />
+
+      <EmployeeAllocationMatrix
+        title="Employee-wise brand allocation"
+        description="Hours each employee logged per brand this month — scroll sideways if there are many brands."
+        employees={visibleProfiles}
+        columns={brandColumns}
+        hoursByEmployeeAndColumn={employeeBrandHours}
+      />
 
       <section className="rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="mb-1 text-sm font-semibold text-slate-800">Employee Holidays</h2>

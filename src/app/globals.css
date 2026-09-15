@@ -43,14 +43,15 @@ body {
   background-color: #fef9c3;
 }
 
-/* Office holidays are per-employee, so they tint individual cells (not a
-   whole shared column like weekends) — kept visually distinct via purple. */
+/* The tracker always shows one person's tasks at a time (their own, or
+   whoever a lead/manager is viewing), so a date's holiday/leave status is
+   unambiguous — these tint the whole column, same as weekends. */
 .cell-holiday {
   background-color: #e9d5ff;
 }
 
 .cell-leave {
-  background-color: #fecaca !important;
+  background-color: #fed7aa !important;
 }
 
 .laptop-only-banner {
