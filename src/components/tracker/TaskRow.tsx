@@ -1,6 +1,7 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { MessageCircle, Pencil, Trash2 } from "lucide-react";
 import type { Brand, Task, TaskStatus } from "@/lib/store/types";
 import { StatusDropdown } from "./StatusDropdown";
 import { BrandDropdown } from "./BrandDropdown";
@@ -31,6 +32,9 @@ export function TaskRow({
   onToggleLeave,
   onRequestNewBrand,
   onOpenComments,
+  onDeleteTask,
+  registerCellRef,
+  onNavigate,
 }: {
   task: Task;
   brands: Brand[];
@@ -44,19 +48,72 @@ export function TaskRow({
   onToggleLeave: (date: string) => void;
   onRequestNewBrand: (name: string) => Promise<string | null>;
   onOpenComments: () => void;
+  onDeleteTask: () => void;
+  registerCellRef?: (dateKey: string) => (el: HTMLInputElement | null) => void;
+  onNavigate?: (dateKey: string, direction: "up" | "down" | "left" | "right") => void;
 }) {
   const rowClass = task.status === "done" ? "row-done" : task.status === "hold" ? "row-hold" : "";
   const metaBgClass =
     task.status === "done" ? "bg-slate-100" : task.status === "hold" ? "row-hold bg-white" : "bg-white";
 
+  const [renaming, setRenaming] = useState(false);
+  const [draftName, setDraftName] = useState(task.name);
+
+  function commitRename() {
+    setRenaming(false);
+    const trimmed = draftName.trim();
+    if (trimmed && trimmed !== task.name) onUpdateTask({ name: trimmed });
+    else setDraftName(task.name);
+  }
+
+  function handleDelete() {
+    if (window.confirm(`Delete task "${task.name}"? This removes all logged hours and comments for it.`)) {
+      onDeleteTask();
+    }
+  }
+
   return (
     <div className={`flex border-b border-slate-100 ${rowClass}`}>
       <div className={`sticky left-0 z-10 flex shrink-0 ${metaBgClass}`}>
         <div
-          className="flex shrink-0 items-center gap-2 py-2 pl-8 pr-2 text-sm text-slate-700"
+          className="flex shrink-0 items-center gap-1 py-2 pl-8 pr-2 text-sm text-slate-700"
           style={{ width: META_COLUMNS[0].width }}
         >
-          <span className="truncate">{task.name}</span>
+          {renaming ? (
+            <input
+              autoFocus
+              value={draftName}
+              onChange={(e) => setDraftName(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+                if (e.key === "Escape") {
+                  setDraftName(task.name);
+                  setRenaming(false);
+                }
+              }}
+              className="min-w-0 flex-1 rounded border border-indigo-300 px-1 py-0.5 text-sm outline-none"
+            />
+          ) : (
+            <span className="truncate">{task.name}</span>
+          )}
+          {canEdit && !renaming && (
+            <span className="ml-auto flex shrink-0 items-center gap-1 text-slate-300">
+              <button
+                onClick={() => {
+                  setDraftName(task.name);
+                  setRenaming(true);
+                }}
+                className="hover:text-indigo-600"
+                title="Rename task"
+              >
+                <Pencil size={12} />
+              </button>
+              <button onClick={handleDelete} className="hover:text-red-600" title="Delete task">
+                <Trash2 size={12} />
+              </button>
+            </span>
+          )}
         </div>
         <div
           className="flex shrink-0 items-center px-2 py-2"
@@ -130,6 +187,8 @@ export function TaskRow({
             canToggleLeave={canToggleLeave}
             onChangeHours={(h) => onChangeHours(d.key, h)}
             onToggleLeave={() => onToggleLeave(d.key)}
+            inputRef={registerCellRef?.(d.key)}
+            onNavigate={(direction) => onNavigate?.(d.key, direction)}
           />
         ))}
       </div>

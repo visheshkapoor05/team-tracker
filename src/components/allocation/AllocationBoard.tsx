@@ -221,6 +221,27 @@ export function AllocationBoard({
     [canViewAll, profiles, monthEntries, monthLeaves, tasksById, workingHoursByProfile, brandName, projectName]
   );
 
+  // Each employee's own brand-allocation table (same shape as "My brand-wise
+  // allocation" above), for the manager/lead team view.
+  const perEmployeeBrandSummaries = useMemo(
+    () =>
+      canViewAll
+        ? profiles.map((profile) => ({
+            profile,
+            summary: summarizeAllocation({
+              profileIds: new Set([profile.id]),
+              monthEntries,
+              monthLeaves,
+              tasksById,
+              workingHoursByProfile,
+              brandName,
+              projectName,
+            }),
+          }))
+        : [],
+    [canViewAll, profiles, monthEntries, monthLeaves, tasksById, workingHoursByProfile, brandName, projectName]
+  );
+
   const brandKeys = useMemo(() => brands.map((b) => b.name), [brands]);
 
   const employeeRows = useMemo(() => {
@@ -452,6 +473,24 @@ export function AllocationBoard({
             columns={brandColumns}
             hoursByEmployeeAndColumn={employeeBrandHours}
           />
+
+          <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="mb-1 text-sm font-semibold text-slate-800">Brand allocation % — all employees</h2>
+            <p className="mb-4 text-xs text-slate-400">
+              Every employee&apos;s own brand-wise allocation table (same as &quot;My brand-wise
+              allocation&quot; above), stacked so you can scroll through the whole team.
+            </p>
+            <div className="max-h-[560px] space-y-5 overflow-y-auto pr-1">
+              {perEmployeeBrandSummaries.map(({ profile, summary }) => (
+                <div key={profile.id}>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {profile.full_name} · {summary.totalWorkingHours}h working hours
+                  </h3>
+                  <AllocationTable rows={summary.brandAllocationRows} />
+                </div>
+              ))}
+            </div>
+          </section>
 
           <section className="rounded-xl border border-slate-200 bg-white p-5">
             <h2 className="mb-1 text-sm font-semibold text-slate-800">Employee Holidays</h2>

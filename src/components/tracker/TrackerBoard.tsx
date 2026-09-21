@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import type {
@@ -155,6 +155,54 @@ export function TrackerBoard({
   );
   const canCreateForViewedPerson = viewingProfileId === currentUser.id || canManage;
 
+  const dailyGrandTotals = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const d of days) {
+      let total = 0;
+      for (const task of viewedTasks) {
+        total += entriesByTask[task.id]?.[d.key] ?? 0;
+      }
+      map[d.key] = total;
+    }
+    return map;
+  }, [days, viewedTasks, entriesByTask]);
+
+  // Flat, render-order list of every visible task id, used to resolve
+  // "up"/"down" arrow-key navigation across project section boundaries.
+  const orderedTaskIds = useMemo(
+    () => projects.flatMap((p) => viewedTasks.filter((t) => t.project_id === p.id).map((t) => t.id)),
+    [projects, viewedTasks]
+  );
+  const dayKeys = useMemo(() => days.map((d) => d.key), [days]);
+
+  const cellRefs = useRef<Map<string, HTMLInputElement>>(new Map());
+
+  function registerCellRef(taskId: string, dateKey: string) {
+    return (el: HTMLInputElement | null) => {
+      const key = `${taskId}|${dateKey}`;
+      if (el) cellRefs.current.set(key, el);
+      else cellRefs.current.delete(key);
+    };
+  }
+
+  function navigateCell(taskId: string, dateKey: string, direction: "up" | "down" | "left" | "right") {
+    const taskIdx = orderedTaskIds.indexOf(taskId);
+    const dayIdx = dayKeys.indexOf(dateKey);
+    if (taskIdx === -1 || dayIdx === -1) return;
+    let nextTaskIdx = taskIdx;
+    let nextDayIdx = dayIdx;
+    if (direction === "left") nextDayIdx = Math.max(0, dayIdx - 1);
+    if (direction === "right") nextDayIdx = Math.min(dayKeys.length - 1, dayIdx + 1);
+    if (direction === "up") nextTaskIdx = Math.max(0, taskIdx - 1);
+    if (direction === "down") nextTaskIdx = Math.min(orderedTaskIds.length - 1, taskIdx + 1);
+    const nextKey = `${orderedTaskIds[nextTaskIdx]}|${dayKeys[nextDayIdx]}`;
+    const nextEl = cellRefs.current.get(nextKey);
+    if (nextEl) {
+      nextEl.focus();
+      nextEl.select();
+    }
+  }
+
   function goToMonth(delta: number) {
     const d = new Date(year, month + delta, 1);
     setYear(d.getFullYear());
@@ -270,7 +318,44 @@ export function TrackerBoard({
       throw new Error(error ?? "Could not create project");
     }
     const { project } = await res.json();
-    setProjects((prev) => [...prev, project]);
+    setProjects((prev) => [project, ...prev]);
+  }
+
+  async function renameProject(projectId: string, name: string) {
+    const res = await fetch(`/api/projects/${projectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (!res.ok) {
+      const { error } = await res.json();
+      alert(error ?? "Could not rename project");
+      return;
+    }
+    const { project } = await res.json();
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? project : p)));
+  }
+
+  async function deleteProject(projectId: string) {
+    const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
+    if (!res.ok) {
+      const { error } = await res.json();
+      alert(error ?? "Could not delete project");
+      return;
+    }
+    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    setTasks((prev) => prev.filter((t) => t.project_id !== projectId));
+  }
+
+  async function deleteTask(taskId: string) {
+    const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+    if (!res.ok) {
+      const { error } = await res.json();
+      alert(error ?? "Could not delete task");
+      return;
+    }
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    setEntries((prev) => prev.filter((e) => e.task_id !== taskId));
   }
 
   const gridWidth = META_TOTAL_WIDTH + days.length * DAY_WIDTH;
@@ -340,6 +425,31 @@ export function TrackerBoard({
             </div>
           </div>
 
+          {projects.length > 0 && (
+            <div className="flex border-b border-slate-200 bg-slate-100">
+              <div
+                className="sticky left-0 z-10 flex shrink-0 items-center bg-slate-100 py-2.5 pl-3 pr-2 text-sm font-semibold text-slate-700"
+                style={{ width: META_TOTAL_WIDTH }}
+              >
+                Total (all projects)
+              </div>
+              <div className="flex shrink-0">
+                {days.map((d) => {
+                  const total = dailyGrandTotals[d.key];
+                  return (
+                    <div
+                      key={d.key}
+                      className={`flex h-full items-center justify-center border-r border-slate-200 text-xs font-semibold text-slate-700 ${dayTintClass(d)}`}
+                      style={{ width: DAY_WIDTH }}
+                    >
+                      {total > 0 ? total : ""}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {projects.length === 0 && (
             <div className="p-10 text-center text-sm text-slate-400">
               No projects yet. Create one to get started.
@@ -363,6 +473,11 @@ export function TrackerBoard({
               onRequestNewBrand={requestNewBrand}
               onOpenComments={setCommentsTask}
               onCreateTask={(input) => createTask(project.id, input)}
+              onRenameProject={(name) => renameProject(project.id, name)}
+              onDeleteProject={() => deleteProject(project.id)}
+              onDeleteTask={deleteTask}
+              registerCellRef={registerCellRef}
+              onNavigate={navigateCell}
             />
           ))}
         </div>

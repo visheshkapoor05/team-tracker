@@ -315,7 +315,10 @@ export async function updateStaleTaskReminderDays(
 
 export async function listProjects(): Promise<Project[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("projects").select("*").order("created_at");
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .order("created_at", { ascending: false });
   throwIfError(error);
   return data ?? [];
 }

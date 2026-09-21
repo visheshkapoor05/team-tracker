@@ -15,6 +15,8 @@ export function DateCell({
   canToggleLeave,
   onChangeHours,
   onToggleLeave,
+  inputRef,
+  onNavigate,
 }: {
   hours: number | undefined;
   isLeave: boolean;
@@ -24,6 +26,8 @@ export function DateCell({
   canToggleLeave: boolean;
   onChangeHours: (hours: number) => void;
   onToggleLeave: () => void;
+  inputRef?: (el: HTMLInputElement | null) => void;
+  onNavigate?: (direction: "up" | "down" | "left" | "right") => void;
 }) {
   const [value, setValue] = useState(hours !== undefined ? String(hours) : "");
   const [syncedHours, setSyncedHours] = useState(hours);
@@ -58,11 +62,29 @@ export function DateCell({
         <span className="text-[10px] font-medium text-orange-700">Leave</span>
       ) : (
         <input
+          ref={inputRef}
           disabled={!editable}
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onFocus={(e) => e.currentTarget.select()}
           onBlur={commit}
-          onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              (e.currentTarget as HTMLInputElement).blur();
+              return;
+            }
+            const directions: Record<string, "up" | "down" | "left" | "right"> = {
+              ArrowUp: "up",
+              ArrowDown: "down",
+              ArrowLeft: "left",
+              ArrowRight: "right",
+            };
+            const direction = directions[e.key];
+            if (direction && onNavigate) {
+              e.preventDefault();
+              onNavigate(direction);
+            }
+          }}
           inputMode="decimal"
           className="h-full w-full bg-transparent text-center text-xs outline-none disabled:cursor-not-allowed"
           placeholder=""
