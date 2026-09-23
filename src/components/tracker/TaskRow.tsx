@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MessageCircle, Pencil, Trash2 } from "lucide-react";
 import type { Brand, Task, TaskStatus } from "@/lib/store/types";
 import { StatusDropdown } from "./StatusDropdown";
@@ -56,6 +56,26 @@ export function TaskRow({
   const metaBgClass =
     task.status === "done" ? "bg-slate-100" : task.status === "hold" ? "row-hold bg-white" : "bg-white";
 
+  // A one-shot flash across the whole row the moment status actually
+  // changes to Done or Hold — separate from row-done/row-hold's persistent
+  // resting style, which would otherwise replay on every remount instead
+  // of just the change itself. Comparing against the previous render's
+  // status inline (rather than in an effect) is the documented React
+  // pattern for reacting to a prop change without an extra render pass.
+  const [prevStatus, setPrevStatus] = useState(task.status);
+  const [flashClass, setFlashClass] = useState("");
+  if (prevStatus !== task.status) {
+    setPrevStatus(task.status);
+    if (task.status === "done") setFlashClass("row-flash-done");
+    else if (task.status === "hold") setFlashClass("row-flash-hold");
+    else setFlashClass("");
+  }
+  useEffect(() => {
+    if (!flashClass) return;
+    const t = setTimeout(() => setFlashClass(""), 900);
+    return () => clearTimeout(t);
+  }, [flashClass]);
+
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState(task.name);
 
@@ -73,7 +93,8 @@ export function TaskRow({
   }
 
   return (
-    <div className={`flex border-b border-slate-100 ${rowClass}`}>
+    <div className={`relative flex border-b border-slate-100 ${rowClass}`}>
+      {flashClass && <div className={`pointer-events-none absolute inset-0 z-20 ${flashClass}`} />}
       <div className={`sticky left-0 z-10 flex shrink-0 ${metaBgClass}`}>
         <div
           className="flex shrink-0 items-center gap-1 py-2 pl-8 pr-2 text-sm text-slate-700"
@@ -95,7 +116,9 @@ export function TaskRow({
               className="min-w-0 flex-1 rounded border border-indigo-300 px-1 py-0.5 text-sm outline-none"
             />
           ) : (
-            <span className="truncate">{task.name}</span>
+            <span className="truncate" title={task.name}>
+              {task.name}
+            </span>
           )}
           {canEdit && !renaming && (
             <span className="ml-auto flex shrink-0 items-center gap-1 text-slate-300">
@@ -104,12 +127,16 @@ export function TaskRow({
                   setDraftName(task.name);
                   setRenaming(true);
                 }}
-                className="hover:text-indigo-600"
+                className="rounded p-0.5 transition-all duration-150 hover:bg-accent-wash hover:text-indigo-600 active:scale-90"
                 title="Rename task"
               >
                 <Pencil size={12} />
               </button>
-              <button onClick={handleDelete} className="hover:text-red-600" title="Delete task">
+              <button
+                onClick={handleDelete}
+                className="rounded p-0.5 transition-all duration-150 hover:bg-danger-wash hover:text-red-600 active:scale-90"
+                title="Delete task"
+              >
                 <Trash2 size={12} />
               </button>
             </span>
@@ -146,7 +173,7 @@ export function TaskRow({
             disabled={!canEdit}
             value={task.start_date ?? ""}
             onChange={(e) => onUpdateTask({ start_date: e.target.value || null })}
-            className="w-full rounded-md border border-slate-200 px-1.5 py-1 text-xs outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-md border border-slate-200 px-1.5 py-1 text-xs outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
         <div
@@ -158,14 +185,17 @@ export function TaskRow({
             disabled={!canEdit}
             value={task.end_date ?? ""}
             onChange={(e) => onUpdateTask({ end_date: e.target.value || null })}
-            className="w-full rounded-md border border-slate-200 px-1.5 py-1 text-xs outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-md border border-slate-200 px-1.5 py-1 text-xs outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
         <div
           className="flex shrink-0 items-center justify-center px-2 py-2"
           style={{ width: META_COLUMNS[5].width }}
         >
-          <button onClick={onOpenComments} className="relative text-slate-400 hover:text-indigo-600">
+          <button
+            onClick={onOpenComments}
+            className="relative rounded p-1 text-slate-400 transition-all duration-150 hover:bg-accent-wash hover:text-indigo-600 active:scale-90"
+          >
             <MessageCircle size={18} />
             {commentCount > 0 && (
               <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-semibold text-white">

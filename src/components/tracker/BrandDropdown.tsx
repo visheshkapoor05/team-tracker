@@ -57,7 +57,7 @@ export function BrandDropdown({
         ref={ref}
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
       >
         <span className="truncate">{current?.name ?? "Select brand"}</span>
         {current?.status === "pending" && (
@@ -73,14 +73,15 @@ export function BrandDropdown({
         {!disabled && <ChevronDown size={12} className="ml-auto shrink-0 text-slate-400" />}
       </button>
       <DropdownPortal anchorRef={ref} open={open} onClose={close} width={224}>
-        {approved.map((b) => (
+        {approved.map((b, i) => (
           <button
             key={b.id}
             onClick={() => {
               onChange(b.id);
               close();
             }}
-            className="block w-full truncate px-2.5 py-1.5 text-left text-xs hover:bg-slate-50"
+            style={{ animationDelay: `${Math.min(i, 6) * 20}ms` }}
+            className="dropdown-item-in block w-full truncate rounded-md px-2.5 py-1.5 text-left text-xs hover:bg-slate-50"
           >
             {b.name}
           </button>

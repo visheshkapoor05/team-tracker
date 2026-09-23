@@ -41,16 +41,16 @@ export function EmployeeAllocationMatrix({
                 const row = hoursByEmployeeAndColumn[emp.id] ?? {};
                 const total = columns.reduce((sum, c) => sum + (row[c.id] ?? 0), 0);
                 return (
-                  <tr key={emp.id} className="border-t border-slate-100">
-                    <td className="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-slate-700">
+                  <tr key={emp.id} className="group border-t border-slate-100 transition-colors duration-150 hover:bg-slate-50">
+                    <td className="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-slate-700 transition-colors duration-150 group-hover:bg-slate-50">
                       {emp.full_name}
                     </td>
                     {columns.map((c) => (
-                      <td key={c.id} className="px-3 py-2 text-right text-slate-600">
+                      <td key={c.id} className="tabular px-3 py-2 text-right text-slate-600">
                         {row[c.id] ? row[c.id] : <span className="text-slate-300">–</span>}
                       </td>
                     ))}
-                    <td className="px-3 py-2 text-right font-medium text-slate-800">
+                    <td className="tabular px-3 py-2 text-right font-medium text-slate-800">
                       {total ? total : <span className="text-slate-300">–</span>}
                     </td>
                   </tr>

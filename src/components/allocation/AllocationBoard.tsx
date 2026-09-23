@@ -531,9 +531,9 @@ export function AllocationBoard({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
+      <p className="tabular mt-1 text-2xl font-semibold text-slate-900">{value}</p>
     </div>
   );
 }
@@ -553,14 +553,16 @@ function TotalsTable({
     <div className="flex flex-col gap-2">
       {rows.map((r) => (
         <div key={r.name} className="flex items-center gap-3">
-          <span className="w-40 shrink-0 truncate text-sm text-slate-600">{r.name}</span>
+          <span className="w-40 shrink-0 truncate text-sm text-slate-600" title={r.name}>
+            {r.name}
+          </span>
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-indigo-500"
+              className="h-full rounded-full bg-indigo-500 transition-[width] duration-700 ease-out"
               style={{ width: `${(r.hours / max) * 100}%` }}
             />
           </div>
-          <span className="w-14 shrink-0 text-right text-sm font-medium text-slate-700">
+          <span className="tabular w-14 shrink-0 text-right text-sm font-medium text-slate-700">
             {r.hours}h
           </span>
         </div>
@@ -584,13 +586,13 @@ function AllocationTable({ rows }: { rows: { name: string; hours: number; pct: n
           {rows.map((r) => (
             <tr
               key={r.name}
-              className={`border-t border-slate-100 ${
+              className={`border-t border-slate-100 transition-colors duration-150 hover:bg-slate-50 ${
                 r.name === "Bench" ? "text-slate-400" : "text-slate-700"
               }`}
             >
               <td className="px-3 py-2 font-medium">{r.name}</td>
-              <td className="px-3 py-2 text-right">{r.hours}</td>
-              <td className="px-3 py-2 text-right font-medium">{r.pct}%</td>
+              <td className="tabular px-3 py-2 text-right">{r.hours}</td>
+              <td className="tabular px-3 py-2 text-right font-medium">{r.pct}%</td>
             </tr>
           ))}
         </tbody>

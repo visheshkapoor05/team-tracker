@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 import type { Brand, Profile, Task } from "@/lib/store/types";
 import { TaskRow, type DayInfo } from "./TaskRow";
 import { NewTaskRow } from "./NewTaskRow";
@@ -87,8 +87,14 @@ export function ProjectSection({
           className="sticky left-0 z-10 flex shrink-0 items-center gap-2 bg-indigo-100/95 py-2.5 pl-3 pr-2 text-sm font-semibold text-indigo-900"
           style={{ width: META_TOTAL_WIDTH }}
         >
-          <button onClick={() => setExpanded((v) => !v)} className="flex min-w-0 shrink-0 items-center gap-2">
-            {expanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="flex min-w-0 shrink-0 items-center gap-2 transition-transform duration-150 active:scale-90"
+          >
+            <ChevronDown
+              size={15}
+              className={`transition-transform duration-200 ${expanded ? "" : "-rotate-90"}`}
+            />
           </button>
           {renaming ? (
             <input
@@ -106,7 +112,11 @@ export function ProjectSection({
               className="min-w-0 flex-1 rounded border border-indigo-300 bg-white px-1 py-0.5 text-sm font-semibold text-indigo-900 outline-none"
             />
           ) : (
-            <button onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 truncate text-left">
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="min-w-0 flex-1 truncate text-left"
+              title={projectName}
+            >
               {projectName}
             </button>
           )}
@@ -117,12 +127,16 @@ export function ProjectSection({
                   setDraftName(projectName);
                   setRenaming(true);
                 }}
-                className="hover:text-indigo-700"
+                className="rounded p-0.5 transition-all duration-150 hover:bg-white/70 hover:text-indigo-700 active:scale-90"
                 title="Rename project"
               >
                 <Pencil size={13} />
               </button>
-              <button onClick={handleDeleteProject} className="hover:text-red-600" title="Delete project">
+              <button
+                onClick={handleDeleteProject}
+                className="rounded p-0.5 transition-all duration-150 hover:bg-white/70 hover:text-red-600 active:scale-90"
+                title="Delete project"
+              >
                 <Trash2 size={13} />
               </button>
             </span>

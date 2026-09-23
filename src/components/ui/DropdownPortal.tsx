@@ -87,7 +87,8 @@ export function DropdownPortal({
   return createPortal(
     <div
       ref={contentRef}
-      className="fixed z-[9999] max-h-72 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg"
+      data-align={align}
+      className="dropdown-pop fixed z-[9999] max-h-72 overflow-y-auto rounded-lg border border-line bg-surface py-1 shadow-lg"
       style={{ top: pos.top, left: pos.left, width }}
     >
       {children}

@@ -86,7 +86,7 @@ export function DateCell({
             }
           }}
           inputMode="decimal"
-          className="h-full w-full bg-transparent text-center text-xs outline-none disabled:cursor-not-allowed"
+          className="tabular h-full w-full bg-transparent text-center text-xs outline-none transition-all duration-150 focus:bg-indigo-50 focus:ring-2 focus:ring-inset focus:ring-indigo-400 disabled:cursor-not-allowed"
           placeholder=""
         />
       )}
@@ -94,7 +94,7 @@ export function DateCell({
         <button
           ref={menuBtnRef}
           onClick={() => setMenuOpen((v) => !v)}
-          className="absolute right-0 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-bl bg-slate-200/80 text-slate-600 hover:bg-slate-300"
+          className="absolute right-0 top-0 flex h-3.5 w-3.5 items-center justify-center rounded-bl bg-slate-200/80 text-slate-600 transition-all duration-150 hover:bg-indigo-200 hover:text-indigo-800 active:scale-90"
         >
           <MoreHorizontal size={9} />
         </button>
@@ -111,7 +111,7 @@ export function DateCell({
             onToggleLeave();
             setMenuOpen(false);
           }}
-          className="block w-full px-2.5 py-1.5 text-left text-xs hover:bg-slate-50"
+          className="dropdown-item-in block w-full rounded-md px-2.5 py-1.5 text-left text-xs hover:bg-slate-50"
         >
           {isLeave ? "Clear leave" : "Mark as leave"}
         </button>

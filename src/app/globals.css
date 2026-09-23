@@ -1,9 +1,49 @@
 @import "tailwindcss";
 
+/*
+ * "Daybook" visual direction — cool graphite/paper neutrals with one warm
+ * accent, tabular numbers for anything counting hours. The indigo-* scale
+ * below is remapped wholesale so every existing `bg-indigo-600`,
+ * `text-indigo-700`, etc. across the app picks up the new accent without
+ * touching each call site individually.
+ */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --border: #e2e8f0;
+  --background: #eef1f4;
+  --foreground: #10151f;
+  --border: #d9dee3;
+
+  --ink: #10151f;
+  --ink-soft: #52606d;
+  --muted: #79828e;
+  --line: #d9dee3;
+  --line-strong: #c2c9d1;
+  --paper: #eef1f4;
+  --surface: #ffffff;
+  --surface-2: #f5f7f8;
+
+  --accent-wash: #fbeaf3;
+  --accent-100: #f6d5e7;
+  --accent-200: #f0bfda;
+  --accent-300: #e39ac3;
+  --accent-400: #c767a0;
+  --accent-500: #b04987;
+  --accent: #a6317d;
+  --accent-strong: #8a2668;
+  --accent-800: #6e1e52;
+  --accent-900: #4a1637;
+  --accent-ink: #ffffff;
+
+  --ok: #2fa36b;
+  --ok-wash: #e3f4ec;
+  --info: #3b82c4;
+  --info-wash: #e6f0f9;
+  --danger: #e15252;
+  --danger-strong: #c7413f;
+  --danger-wash: #fbe8e8;
+  --holiday: #8a5fd6;
+  --holiday-wash: #efe7fb;
+  --leave: #d9822b;
+  --leave-wash: #fdecd9;
 }
 
 @theme inline {
@@ -11,6 +51,35 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ok: var(--ok);
+  --color-ok-wash: var(--ok-wash);
+  --color-info: var(--info);
+  --color-info-wash: var(--info-wash);
+  --color-danger-strong: var(--danger-strong);
+  --color-danger-wash: var(--danger-wash);
+  --color-holiday: var(--holiday);
+  --color-leave: var(--leave);
+
+  /* Remap the default indigo scale to the accent palette — every existing
+     indigo-* utility class across the app now renders in the new accent. */
+  --color-indigo-50: var(--accent-wash);
+  --color-indigo-100: var(--accent-100);
+  --color-indigo-200: var(--accent-200);
+  --color-indigo-300: var(--accent-300);
+  --color-indigo-400: var(--accent-400);
+  --color-indigo-500: var(--accent-500);
+  --color-indigo-600: var(--accent);
+  --color-indigo-700: var(--accent-strong);
+  --color-indigo-800: var(--accent-800);
+  --color-indigo-900: var(--accent-900);
 }
 
 body {
@@ -19,13 +88,19 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
 }
 
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Status rows ---------- */
+
 @keyframes row-hold-pulse {
   0%,
   100% {
-    background-color: rgba(239, 68, 68, 0.05);
+    background-color: color-mix(in srgb, var(--danger) 5%, transparent);
   }
   50% {
-    background-color: rgba(239, 68, 68, 0.11);
+    background-color: color-mix(in srgb, var(--danger) 12%, transparent);
   }
 }
 
@@ -35,23 +110,131 @@ body {
 
 .row-done {
   transition: background-color 380ms ease, opacity 380ms ease;
-  opacity: 0.55;
-  background-color: #f1f5f9;
+  opacity: 0.6;
+  background-color: var(--ok-wash);
 }
 
+/* One-shot sweep played only at the moment a task's status actually
+   changes to Done/Hold (triggered from TaskRow, not on every render), so
+   the change itself gets a beat of feedback beyond the status pill. */
+@keyframes row-flash-done {
+  0% {
+    background-color: color-mix(in srgb, var(--ok) 45%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+.row-flash-done {
+  animation: row-flash-done 900ms ease-out;
+}
+
+@keyframes row-flash-hold {
+  0% {
+    background-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+.row-flash-hold {
+  animation: row-flash-hold 900ms ease-out;
+}
+
+/* ---------- Date column tints ---------- */
+/* Weekend gets a hatch texture (not just a flat tint) so it reads
+   unambiguously against a plain weekday column even at a glance. */
 .col-weekend {
-  background-color: #fef9c3;
+  background-color: var(--surface-2);
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ink) 7%, transparent) 0 6px,
+    transparent 6px 13px
+  );
 }
 
 /* The tracker always shows one person's tasks at a time (their own, or
    whoever a lead/manager is viewing), so a date's holiday/leave status is
    unambiguous — these tint the whole column, same as weekends. */
 .cell-holiday {
-  background-color: #e9d5ff;
+  background-color: var(--holiday-wash);
 }
 
 .cell-leave {
-  background-color: #fed7aa !important;
+  background-color: var(--leave-wash) !important;
+}
+
+/* ---------- Dropdown / menu entrance ---------- */
+@keyframes dropdown-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.dropdown-pop {
+  animation: dropdown-pop 160ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dropdown-pop[data-align="right"] {
+  transform-origin: top right;
+}
+.dropdown-pop[data-align="left"] {
+  transform-origin: top left;
+}
+
+@keyframes dropdown-item-in {
+  from {
+    opacity: 0;
+    transform: translateX(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.dropdown-item-in {
+  animation: dropdown-item-in 160ms ease both;
+}
+
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.modal-backdrop {
+  animation: modal-backdrop-in 160ms ease;
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.modal-pop {
+  animation: modal-pop 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-hold,
+  .row-flash-done,
+  .row-flash-hold,
+  .dropdown-pop,
+  .dropdown-item-in,
+  .modal-backdrop,
+  .modal-pop {
+    animation: none !important;
+  }
 }
 
 .laptop-only-banner {
@@ -72,6 +255,6 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--line-strong);
   border-radius: 9999px;
 }

@@ -36,16 +36,13 @@ export function NewProjectModal({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={onClose}>
-      <div
-        className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="modal-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={onClose}>
+      <div className="modal-pop w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-800">New Project</h2>
           <button
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-slate-100"
+            className="flex h-7 w-7 items-center justify-center rounded-full transition-all duration-150 hover:bg-slate-100 active:scale-90"
           >
             <X size={16} />
           </button>
@@ -57,7 +54,7 @@ export function NewProjectModal({
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               placeholder="e.g. Chatbot Platform"
             />
           </label>
@@ -68,7 +65,7 @@ export function NewProjectModal({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-200 px-2 py-2 text-sm outline-none focus:border-indigo-400"
+                className="mt-1 w-full rounded-md border border-slate-200 px-2 py-2 text-sm outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
             </label>
             <label className="flex-1 text-xs font-medium text-slate-600">
@@ -77,7 +74,7 @@ export function NewProjectModal({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-200 px-2 py-2 text-sm outline-none focus:border-indigo-400"
+                className="mt-1 w-full rounded-md border border-slate-200 px-2 py-2 text-sm outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
             </label>
           </div>
@@ -85,7 +82,7 @@ export function NewProjectModal({
           <button
             onClick={submit}
             disabled={saving}
-            className="mt-1 w-full rounded-md bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="mt-1 w-full rounded-md bg-indigo-600 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
           >
             {saving ? "Creating…" : "Create project"}
           </button>

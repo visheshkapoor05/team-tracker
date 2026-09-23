@@ -390,7 +390,7 @@ export function TrackerBoard({
         )}
         <button
           onClick={() => setShowNewProject(true)}
-          className="flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+          className="flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md active:translate-y-0 active:scale-[0.97]"
         >
           <Plus size={14} /> New Project
         </button>

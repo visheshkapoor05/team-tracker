@@ -48,7 +48,7 @@ export function NewTaskRow({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="sticky left-0 z-10 flex items-center gap-1.5 bg-white py-2 pl-8 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+        className="sticky left-0 z-10 flex items-center gap-1.5 bg-white py-2 pl-8 text-xs font-medium text-indigo-600 transition-all duration-150 hover:gap-2 hover:text-indigo-700 active:scale-[0.98]"
         style={{ width: META_TOTAL_WIDTH }}
       >
         <Plus size={12} /> New Task
@@ -66,7 +66,7 @@ export function NewTaskRow({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Task name"
-        className="min-w-[180px] flex-1 rounded-md border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-indigo-400"
+        className="min-w-[180px] flex-1 rounded-md border border-slate-200 px-2 py-1.5 text-xs outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
       />
       <BrandDropdown
         value={brandId}
@@ -77,7 +77,7 @@ export function NewTaskRow({
       <button
         onClick={submit}
         disabled={saving}
-        className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+        className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-all duration-150 hover:bg-indigo-700 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
       >
         {saving ? "Saving…" : "Add task"}
       </button>
@@ -86,7 +86,7 @@ export function NewTaskRow({
           setOpen(false);
           setError(null);
         }}
-        className="text-xs text-slate-400 hover:text-slate-600"
+        className="rounded-md px-2 py-1.5 text-xs text-slate-400 transition-all duration-150 hover:bg-slate-100 hover:text-slate-600 active:scale-95"
       >
         Cancel
       </button>
