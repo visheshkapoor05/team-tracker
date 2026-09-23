@@ -29,6 +29,8 @@ export function DropdownPortal({
   const contentRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
+  // First pass: position below the anchor (the common case) so the menu
+  // exists in the DOM and can be measured.
   useLayoutEffect(() => {
     if (!open || !anchorRef.current) {
       setPos(null);
@@ -40,6 +42,24 @@ export function DropdownPortal({
       left: align === "right" ? rect.right - (width ?? rect.width) : rect.left,
     });
   }, [open, anchorRef, align, width]);
+
+  // Second pass: if the menu doesn't fit below the anchor but does fit
+  // above it, flip it — a `position: fixed` menu clipped by the viewport
+  // edge can never be reached by scrolling the page, so this has to be
+  // resolved at layout time, not left to the user to scroll around.
+  useLayoutEffect(() => {
+    if (!open || !pos || !anchorRef.current || !contentRef.current) return;
+    const anchorRect = anchorRef.current.getBoundingClientRect();
+    const menuHeight = contentRef.current.getBoundingClientRect().height;
+    const spaceBelow = window.innerHeight - anchorRect.bottom;
+    const spaceAbove = anchorRect.top;
+    if (spaceBelow < menuHeight + 8 && spaceAbove > spaceBelow) {
+      const top = Math.max(8, anchorRect.top - menuHeight - 4);
+      // Bails out via the unchanged-reference return once the flip has been
+      // applied, so this converges instead of looping.
+      setPos((prev) => (prev && prev.top === top ? prev : { ...prev!, top }));
+    }
+  }, [open, anchorRef, pos]);
 
   useEffect(() => {
     if (!open) return;
