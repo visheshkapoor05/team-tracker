@@ -30,11 +30,11 @@ export function LoginForm() {
   return (
     <form
       onSubmit={submit}
-      className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 shadow-sm"
     >
-      <h2 className="mb-4 text-sm font-semibold text-slate-800">Log in</h2>
+      <h2 className="mb-4 text-sm font-semibold text-ink">Log in</h2>
       <div className="flex flex-col gap-3">
-        <label className="text-xs font-medium text-slate-600">
+        <label className="text-xs font-medium text-ink-soft">
           Email
           <input
             type="email"
@@ -42,17 +42,17 @@ export function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@easyrewardz.com"
-            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-indigo-400"
           />
         </label>
-        <label className="text-xs font-medium text-slate-600">
+        <label className="text-xs font-medium text-ink-soft">
           Password
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-indigo-400"
           />
         </label>
         {error && <p className="text-xs text-red-600">{error}</p>}
@@ -64,7 +64,7 @@ export function LoginForm() {
           {loading ? "Logging in…" : "Log in"}
         </button>
       </div>
-      <p className="mt-4 text-center text-xs text-slate-400">
+      <p className="mt-4 text-center text-xs text-muted">
         No account yet?{" "}
         <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-700">
           Sign up

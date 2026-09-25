@@ -35,9 +35,9 @@ export function ReminderSettings({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <h2 className="mb-1 text-sm font-semibold text-slate-800">Stale Task Reminders</h2>
-      <p className="mb-4 text-xs text-slate-400">
+    <section className="rounded-xl border border-line bg-surface p-5">
+      <h2 className="mb-1 text-sm font-semibold text-ink">Stale Task Reminders</h2>
+      <p className="mb-4 text-xs text-muted">
         If a task&apos;s status hasn&apos;t changed in this many days (and it isn&apos;t Done),
         both the task owner and all managers get a reminder notification — repeating every this
         many days until the status changes.
@@ -51,9 +51,9 @@ export function ReminderSettings({
             setValue(e.target.value);
             setSaved(false);
           }}
-          className="w-24 rounded-md border border-slate-200 px-2 py-1.5 text-sm outline-none focus:border-indigo-400"
+          className="w-24 rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-indigo-400"
         />
-        <span className="text-sm text-slate-500">days</span>
+        <span className="text-sm text-muted">days</span>
         <button
           onClick={save}
           disabled={saving}

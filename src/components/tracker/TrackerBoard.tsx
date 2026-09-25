@@ -362,20 +362,20 @@ export function TrackerBoard({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
+      <div className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <div className="flex items-center gap-1">
           <button
             onClick={() => goToMonth(-1)}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-line hover:bg-surface-2"
           >
             <ChevronLeft size={14} />
           </button>
-          <span className="min-w-36 text-center text-sm font-semibold text-slate-800">
+          <span className="min-w-36 text-center text-sm font-semibold text-ink">
             {monthLabel(year, month)}
           </span>
           <button
             onClick={() => goToMonth(1)}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-line hover:bg-surface-2"
           >
             <ChevronRight size={14} />
           </button>
@@ -398,12 +398,12 @@ export function TrackerBoard({
 
       <div className="flex-1 overflow-x-auto">
         <div style={{ minWidth: gridWidth }}>
-          <div className="flex border-b border-slate-200 bg-slate-50">
-            <div className="sticky left-0 z-10 flex shrink-0 bg-slate-50">
+          <div className="flex border-b border-line bg-surface-2">
+            <div className="sticky left-0 z-10 flex shrink-0 bg-surface-2">
               {META_COLUMNS.map((c) => (
                 <div
                   key={c.key}
-                  className="shrink-0 overflow-hidden truncate whitespace-nowrap px-2 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  className="shrink-0 overflow-hidden truncate whitespace-nowrap px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted"
                   style={{ width: c.width }}
                   title={c.label}
                 >
@@ -415,7 +415,7 @@ export function TrackerBoard({
               {days.map((d) => (
                 <div
                   key={d.key}
-                  className={`flex h-full shrink-0 items-center justify-center border-r border-slate-100 text-xs font-medium text-slate-500 ${dayTintClass(d)}`}
+                  className={`flex h-full shrink-0 items-center justify-center border-r border-line text-xs font-medium text-muted ${dayTintClass(d)}`}
                   style={{ width: DAY_WIDTH }}
                   title={d.isLeave ? "Leave" : d.isHoliday ? "Holiday" : d.isWeekend ? "Weekend" : undefined}
                 >
@@ -426,9 +426,9 @@ export function TrackerBoard({
           </div>
 
           {projects.length > 0 && (
-            <div className="flex border-b border-slate-200 bg-slate-100">
+            <div className="flex border-b border-line bg-surface-2">
               <div
-                className="sticky left-0 z-10 flex shrink-0 items-center bg-slate-100 py-2.5 pl-3 pr-2 text-sm font-semibold text-slate-700"
+                className="sticky left-0 z-10 flex shrink-0 items-center bg-surface-2 py-2.5 pl-3 pr-2 text-sm font-semibold text-ink"
                 style={{ width: META_TOTAL_WIDTH }}
               >
                 Total (all projects)
@@ -439,7 +439,7 @@ export function TrackerBoard({
                   return (
                     <div
                       key={d.key}
-                      className={`flex h-full items-center justify-center border-r border-slate-200 text-xs font-semibold text-slate-700 ${dayTintClass(d)}`}
+                      className={`flex h-full items-center justify-center border-r border-line text-xs font-semibold text-ink ${dayTintClass(d)}`}
                       style={{ width: DAY_WIDTH }}
                     >
                       {total > 0 ? total : ""}
@@ -451,7 +451,7 @@ export function TrackerBoard({
           )}
 
           {projects.length === 0 && (
-            <div className="p-10 text-center text-sm text-slate-400">
+            <div className="p-10 text-center text-sm text-muted">
               No projects yet. Create one to get started.
             </div>
           )}

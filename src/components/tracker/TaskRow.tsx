@@ -54,7 +54,7 @@ export function TaskRow({
 }) {
   const rowClass = task.status === "done" ? "row-done" : task.status === "hold" ? "row-hold" : "";
   const metaBgClass =
-    task.status === "done" ? "bg-slate-100" : task.status === "hold" ? "row-hold bg-white" : "bg-white";
+    task.status === "done" ? "bg-surface-2" : task.status === "hold" ? "row-hold bg-surface" : "bg-surface";
 
   // A one-shot flash across the whole row the moment status actually
   // changes to Done or Hold — separate from row-done/row-hold's persistent
@@ -93,11 +93,11 @@ export function TaskRow({
   }
 
   return (
-    <div className={`relative flex border-b border-slate-100 ${rowClass}`}>
+    <div className={`relative flex border-b border-line ${rowClass}`}>
       {flashClass && <div className={`pointer-events-none absolute inset-0 z-20 ${flashClass}`} />}
       <div className={`sticky left-0 z-10 flex shrink-0 ${metaBgClass}`}>
         <div
-          className="flex shrink-0 items-center gap-1 py-2 pl-8 pr-2 text-sm text-slate-700"
+          className="flex shrink-0 items-center gap-1 py-2 pl-8 pr-2 text-sm text-ink"
           style={{ width: META_COLUMNS[0].width }}
         >
           {renaming ? (
@@ -121,7 +121,7 @@ export function TaskRow({
             </span>
           )}
           {canEdit && !renaming && (
-            <span className="ml-auto flex shrink-0 items-center gap-1 text-slate-300">
+            <span className="ml-auto flex shrink-0 items-center gap-1 text-muted">
               <button
                 onClick={() => {
                   setDraftName(task.name);
@@ -173,7 +173,7 @@ export function TaskRow({
             disabled={!canEdit}
             value={task.start_date ?? ""}
             onChange={(e) => onUpdateTask({ start_date: e.target.value || null })}
-            className="w-full rounded-md border border-slate-200 px-1.5 py-1 text-xs outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-md border border-line px-1.5 py-1 text-xs outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
         <div
@@ -185,7 +185,7 @@ export function TaskRow({
             disabled={!canEdit}
             value={task.end_date ?? ""}
             onChange={(e) => onUpdateTask({ end_date: e.target.value || null })}
-            className="w-full rounded-md border border-slate-200 px-1.5 py-1 text-xs outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-md border border-line px-1.5 py-1 text-xs outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
         <div
@@ -194,7 +194,7 @@ export function TaskRow({
         >
           <button
             onClick={onOpenComments}
-            className="relative rounded p-1 text-slate-400 transition-all duration-150 hover:bg-accent-wash hover:text-indigo-600 active:scale-90"
+            className="relative rounded p-1 text-muted transition-all duration-150 hover:bg-accent-wash hover:text-indigo-600 active:scale-90"
           >
             <MessageCircle size={18} />
             {commentCount > 0 && (

@@ -153,8 +153,8 @@ export function AdminBoard({
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
       <div>
-        <h1 className="text-lg font-semibold text-slate-900">Admin</h1>
-        <p className="text-sm text-slate-400">
+        <h1 className="text-lg font-semibold text-ink">Admin</h1>
+        <p className="text-sm text-muted">
           Manager-only tools for roles, offices, brands, holidays, and reminders.
         </p>
       </div>

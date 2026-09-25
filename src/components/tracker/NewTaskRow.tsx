@@ -48,7 +48,7 @@ export function NewTaskRow({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="sticky left-0 z-10 flex items-center gap-1.5 bg-white py-2 pl-8 text-xs font-medium text-indigo-600 transition-all duration-150 hover:gap-2 hover:text-indigo-700 active:scale-[0.98]"
+        className="sticky left-0 z-10 flex items-center gap-1.5 bg-surface py-2 pl-8 text-xs font-medium text-indigo-600 transition-all duration-150 hover:gap-2 hover:text-indigo-700 active:scale-[0.98]"
         style={{ width: META_TOTAL_WIDTH }}
       >
         <Plus size={12} /> New Task
@@ -58,7 +58,7 @@ export function NewTaskRow({
 
   return (
     <div
-      className="sticky left-0 z-10 flex flex-wrap items-center gap-2 border-b border-slate-100 bg-indigo-50/40 px-4 py-2"
+      className="sticky left-0 z-10 flex flex-wrap items-center gap-2 border-b border-line bg-indigo-50/40 px-4 py-2"
       style={{ width: META_TOTAL_WIDTH }}
     >
       <input
@@ -66,7 +66,7 @@ export function NewTaskRow({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Task name"
-        className="min-w-[180px] flex-1 rounded-md border border-slate-200 px-2 py-1.5 text-xs outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        className="min-w-[180px] flex-1 rounded-md border border-line px-2 py-1.5 text-xs outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
       />
       <BrandDropdown
         value={brandId}
@@ -86,7 +86,7 @@ export function NewTaskRow({
           setOpen(false);
           setError(null);
         }}
-        className="rounded-md px-2 py-1.5 text-xs text-slate-400 transition-all duration-150 hover:bg-slate-100 hover:text-slate-600 active:scale-95"
+        className="rounded-md px-2 py-1.5 text-xs text-muted transition-all duration-150 hover:bg-surface-2 hover:text-ink-soft active:scale-95"
       >
         Cancel
       </button>

@@ -37,44 +37,44 @@ export function NewProjectModal({
 
   return (
     <div className="modal-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={onClose}>
-      <div className="modal-pop w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-pop w-full max-w-sm rounded-xl bg-surface p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-800">New Project</h2>
+          <h2 className="text-sm font-semibold text-ink">New Project</h2>
           <button
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full transition-all duration-150 hover:bg-slate-100 active:scale-90"
+            className="flex h-7 w-7 items-center justify-center rounded-full transition-all duration-150 hover:bg-surface-2 active:scale-90"
           >
             <X size={16} />
           </button>
         </div>
         <div className="flex flex-col gap-3">
-          <label className="text-xs font-medium text-slate-600">
+          <label className="text-xs font-medium text-ink-soft">
             Project name
             <input
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               placeholder="e.g. Chatbot Platform"
             />
           </label>
           <div className="flex gap-3">
-            <label className="flex-1 text-xs font-medium text-slate-600">
+            <label className="flex-1 text-xs font-medium text-ink-soft">
               Start date
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-200 px-2 py-2 text-sm outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                className="mt-1 w-full rounded-md border border-line px-2 py-2 text-sm outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
             </label>
-            <label className="flex-1 text-xs font-medium text-slate-600">
+            <label className="flex-1 text-xs font-medium text-ink-soft">
               End date
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-200 px-2 py-2 text-sm outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                className="mt-1 w-full rounded-md border border-line px-2 py-2 text-sm outline-none transition-all duration-150 hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
             </label>
           </div>

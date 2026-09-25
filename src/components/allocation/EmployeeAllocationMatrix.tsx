@@ -17,17 +17,17 @@ export function EmployeeAllocationMatrix({
   hoursByEmployeeAndColumn: Record<string, Record<string, number>>;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <h2 className="mb-1 text-sm font-semibold text-slate-800">{title}</h2>
-      {description && <p className="mb-4 text-xs text-slate-400">{description}</p>}
+    <section className="rounded-xl border border-line bg-surface p-5">
+      <h2 className="mb-1 text-sm font-semibold text-ink">{title}</h2>
+      {description && <p className="mb-4 text-xs text-muted">{description}</p>}
       {columns.length === 0 ? (
-        <p className="py-6 text-center text-sm text-slate-400">Nothing to show yet.</p>
+        <p className="py-6 text-center text-sm text-muted">Nothing to show yet.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-100">
+        <div className="overflow-x-auto rounded-lg border border-line">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+            <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
               <tr>
-                <th className="sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left">Employee</th>
+                <th className="sticky left-0 z-10 bg-surface-2 px-3 py-2 text-left">Employee</th>
                 {columns.map((c) => (
                   <th key={c.id} className="whitespace-nowrap px-3 py-2 text-right">
                     {c.name}
@@ -41,24 +41,24 @@ export function EmployeeAllocationMatrix({
                 const row = hoursByEmployeeAndColumn[emp.id] ?? {};
                 const total = columns.reduce((sum, c) => sum + (row[c.id] ?? 0), 0);
                 return (
-                  <tr key={emp.id} className="group border-t border-slate-100 transition-colors duration-150 hover:bg-slate-50">
-                    <td className="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-slate-700 transition-colors duration-150 group-hover:bg-slate-50">
+                  <tr key={emp.id} className="group border-t border-line transition-colors duration-150 hover:bg-surface-2">
+                    <td className="sticky left-0 z-10 bg-surface px-3 py-2 font-medium text-ink transition-colors duration-150 group-hover:bg-surface-2">
                       {emp.full_name}
                     </td>
                     {columns.map((c) => (
-                      <td key={c.id} className="tabular px-3 py-2 text-right text-slate-600">
-                        {row[c.id] ? row[c.id] : <span className="text-slate-300">–</span>}
+                      <td key={c.id} className="tabular px-3 py-2 text-right text-ink-soft">
+                        {row[c.id] ? row[c.id] : <span className="text-muted">–</span>}
                       </td>
                     ))}
-                    <td className="tabular px-3 py-2 text-right font-medium text-slate-800">
-                      {total ? total : <span className="text-slate-300">–</span>}
+                    <td className="tabular px-3 py-2 text-right font-medium text-ink">
+                      {total ? total : <span className="text-muted">–</span>}
                     </td>
                   </tr>
                 );
               })}
               {employees.length === 0 && (
                 <tr>
-                  <td colSpan={columns.length + 2} className="px-3 py-6 text-center text-slate-400">
+                  <td colSpan={columns.length + 2} className="px-3 py-6 text-center text-muted">
                     No employees to show.
                   </td>
                 </tr>

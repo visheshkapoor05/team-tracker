@@ -325,24 +325,24 @@ export function AllocationBoard({
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900">Resource Allocation</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-lg font-semibold text-ink">Resource Allocation</h1>
+          <p className="text-sm text-muted">
             Working hours, brand allocation %, and leave for the selected month.
           </p>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => goToMonth(-1)}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-line hover:bg-surface-2"
           >
             <ChevronLeft size={14} />
           </button>
-          <span className="min-w-36 text-center text-sm font-semibold text-slate-800">
+          <span className="min-w-36 text-center text-sm font-semibold text-ink">
             {monthLabel(year, month)}
           </span>
           <button
             onClick={() => goToMonth(1)}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-line hover:bg-surface-2"
           >
             <ChevronRight size={14} />
           </button>
@@ -350,7 +350,7 @@ export function AllocationBoard({
       </div>
 
       <div>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
           My allocation
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -363,14 +363,14 @@ export function AllocationBoard({
         </div>
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold text-slate-800">My project-wise allocation</h2>
+      <section className="rounded-xl border border-line bg-surface p-5">
+        <h2 className="mb-3 text-sm font-semibold text-ink">My project-wise allocation</h2>
         <TotalsTable rows={selfSummary.projectTotals} emptyLabel="No hours logged yet this month." />
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-1 text-sm font-semibold text-slate-800">My brand-wise allocation</h2>
-        <p className="mb-4 text-xs text-slate-400">
+      <section className="rounded-xl border border-line bg-surface p-5">
+        <h2 className="mb-1 text-sm font-semibold text-ink">My brand-wise allocation</h2>
+        <p className="mb-4 text-xs text-muted">
           Every brand plus Leave, as a % of your {selfSummary.totalWorkingHours}h working hours
           this month. Bench is auto-computed as whatever&apos;s left over — it isn&apos;t a real
           selectable brand.
@@ -380,8 +380,8 @@ export function AllocationBoard({
 
       {canViewAll && teamSummary && (
         <>
-          <div className="mt-2 border-t border-slate-200 pt-6">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <div className="mt-2 border-t border-line pt-6">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
               Team overview (all employees)
             </h2>
           </div>
@@ -395,14 +395,14 @@ export function AllocationBoard({
             <StatCard label="Bench hours" value={`${teamSummary.benchHours}h`} />
           </div>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-3 text-sm font-semibold text-slate-800">Project-wise allocation</h2>
+          <section className="rounded-xl border border-line bg-surface p-5">
+            <h2 className="mb-3 text-sm font-semibold text-ink">Project-wise allocation</h2>
             <TotalsTable rows={teamSummary.projectTotals} emptyLabel="No hours logged yet this month." />
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-1 text-sm font-semibold text-slate-800">Brand-wise allocation</h2>
-            <p className="mb-4 text-xs text-slate-400">
+          <section className="rounded-xl border border-line bg-surface p-5">
+            <h2 className="mb-1 text-sm font-semibold text-ink">Brand-wise allocation</h2>
+            <p className="mb-4 text-xs text-muted">
               Every brand plus Leave, as a % of {teamSummary.totalWorkingHours}h team working
               hours this month. Bench is auto-computed as whatever&apos;s left over — it
               isn&apos;t a real selectable brand.
@@ -410,9 +410,9 @@ export function AllocationBoard({
             <AllocationTable rows={teamSummary.brandAllocationRows} />
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-1 text-sm font-semibold text-slate-800">Per-employee breakdown</h2>
-            <p className="mb-4 text-xs text-slate-400">
+          <section className="rounded-xl border border-line bg-surface p-5">
+            <h2 className="mb-1 text-sm font-semibold text-ink">Per-employee breakdown</h2>
+            <p className="mb-4 text-xs text-muted">
               Hours by brand plus leave, as a % of each person&apos;s own working hours this month
               (which depends on their office&apos;s holiday calendar).
             </p>
@@ -432,9 +432,9 @@ export function AllocationBoard({
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-4 overflow-hidden rounded-lg border border-slate-100">
+            <div className="mt-4 overflow-hidden rounded-lg border border-line">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+                <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
                   <tr>
                     <th className="px-3 py-2 text-left">Employee</th>
                     <th className="px-3 py-2 text-right">Leave (h)</th>
@@ -445,12 +445,12 @@ export function AllocationBoard({
                 </thead>
                 <tbody>
                   {employeeRows.map((row) => (
-                    <tr key={row.profile.id} className="border-t border-slate-100">
-                      <td className="px-3 py-2 font-medium text-slate-700">{row.profile.full_name}</td>
-                      <td className="px-3 py-2 text-right text-slate-500">{row.leaveHours}</td>
-                      <td className="px-3 py-2 text-right text-slate-500">{row.total}</td>
-                      <td className="px-3 py-2 text-right text-slate-500">{row.workingHours}</td>
-                      <td className="px-3 py-2 text-right font-medium text-slate-700">{row.pct}%</td>
+                    <tr key={row.profile.id} className="border-t border-line">
+                      <td className="px-3 py-2 font-medium text-ink">{row.profile.full_name}</td>
+                      <td className="px-3 py-2 text-right text-muted">{row.leaveHours}</td>
+                      <td className="px-3 py-2 text-right text-muted">{row.total}</td>
+                      <td className="px-3 py-2 text-right text-muted">{row.workingHours}</td>
+                      <td className="px-3 py-2 text-right font-medium text-ink">{row.pct}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -474,16 +474,16 @@ export function AllocationBoard({
             hoursByEmployeeAndColumn={employeeBrandHours}
           />
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-1 text-sm font-semibold text-slate-800">Brand allocation % — all employees</h2>
-            <p className="mb-4 text-xs text-slate-400">
+          <section className="rounded-xl border border-line bg-surface p-5">
+            <h2 className="mb-1 text-sm font-semibold text-ink">Brand allocation % — all employees</h2>
+            <p className="mb-4 text-xs text-muted">
               Every employee&apos;s own brand-wise allocation table (same as &quot;My brand-wise
               allocation&quot; above), stacked so you can scroll through the whole team.
             </p>
             <div className="max-h-[560px] space-y-5 overflow-y-auto pr-1">
               {perEmployeeBrandSummaries.map(({ profile, summary }) => (
                 <div key={profile.id}>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
                     {profile.full_name} · {summary.totalWorkingHours}h working hours
                   </h3>
                   <AllocationTable rows={summary.brandAllocationRows} />
@@ -492,15 +492,15 @@ export function AllocationBoard({
             </div>
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-1 text-sm font-semibold text-slate-800">Employee Holidays</h2>
-            <p className="mb-4 text-xs text-slate-400">
+          <section className="rounded-xl border border-line bg-surface p-5">
+            <h2 className="mb-1 text-sm font-semibold text-ink">Employee Holidays</h2>
+            <p className="mb-4 text-xs text-muted">
               Auto-derived from each employee&apos;s office — no manual per-employee setup. Manage
               the underlying office holiday calendar from Admin.
             </p>
-            <div className="overflow-hidden rounded-lg border border-slate-100">
+            <div className="overflow-hidden rounded-lg border border-line">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+                <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
                   <tr>
                     <th className="px-3 py-2 text-left">Employee</th>
                     <th className="px-3 py-2 text-left">Office</th>
@@ -509,10 +509,10 @@ export function AllocationBoard({
                 </thead>
                 <tbody>
                   {employeeHolidayRows.map((row) => (
-                    <tr key={row.profile.id} className="border-t border-slate-100">
-                      <td className="px-3 py-2 font-medium text-slate-700">{row.profile.full_name}</td>
-                      <td className="px-3 py-2 text-slate-500">{row.office?.name ?? "Unassigned"}</td>
-                      <td className="px-3 py-2 text-slate-500">
+                    <tr key={row.profile.id} className="border-t border-line">
+                      <td className="px-3 py-2 font-medium text-ink">{row.profile.full_name}</td>
+                      <td className="px-3 py-2 text-muted">{row.office?.name ?? "Unassigned"}</td>
+                      <td className="px-3 py-2 text-muted">
                         {row.datesThisMonth.length === 0
                           ? "None"
                           : row.datesThisMonth.map((h) => `${h.holiday_date.slice(8)} (${h.label})`).join(", ")}
@@ -531,9 +531,9 @@ export function AllocationBoard({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="tabular mt-1 text-2xl font-semibold text-slate-900">{value}</p>
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
+      <p className="tabular mt-1 text-2xl font-semibold text-ink">{value}</p>
     </div>
   );
 }
@@ -546,23 +546,23 @@ function TotalsTable({
   emptyLabel: string;
 }) {
   if (rows.length === 0) {
-    return <p className="py-6 text-center text-sm text-slate-400">{emptyLabel}</p>;
+    return <p className="py-6 text-center text-sm text-muted">{emptyLabel}</p>;
   }
   const max = Math.max(...rows.map((r) => r.hours), 1);
   return (
     <div className="flex flex-col gap-2">
       {rows.map((r) => (
         <div key={r.name} className="flex items-center gap-3">
-          <span className="w-40 shrink-0 truncate text-sm text-slate-600" title={r.name}>
+          <span className="w-40 shrink-0 truncate text-sm text-ink-soft" title={r.name}>
             {r.name}
           </span>
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
             <div
               className="h-full rounded-full bg-indigo-500 transition-[width] duration-700 ease-out"
               style={{ width: `${(r.hours / max) * 100}%` }}
             />
           </div>
-          <span className="tabular w-14 shrink-0 text-right text-sm font-medium text-slate-700">
+          <span className="tabular w-14 shrink-0 text-right text-sm font-medium text-ink">
             {r.hours}h
           </span>
         </div>
@@ -573,9 +573,9 @@ function TotalsTable({
 
 function AllocationTable({ rows }: { rows: { name: string; hours: number; pct: number }[] }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-100">
+    <div className="overflow-hidden rounded-lg border border-line">
       <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+        <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
           <tr>
             <th className="px-3 py-2 text-left">Brand</th>
             <th className="px-3 py-2 text-right">Hours</th>
@@ -586,8 +586,8 @@ function AllocationTable({ rows }: { rows: { name: string; hours: number; pct: n
           {rows.map((r) => (
             <tr
               key={r.name}
-              className={`border-t border-slate-100 transition-colors duration-150 hover:bg-slate-50 ${
-                r.name === "Bench" ? "text-slate-400" : "text-slate-700"
+              className={`border-t border-line transition-colors duration-150 hover:bg-surface-2 ${
+                r.name === "Bench" ? "text-muted" : "text-ink"
               }`}
             >
               <td className="px-3 py-2 font-medium">{r.name}</td>

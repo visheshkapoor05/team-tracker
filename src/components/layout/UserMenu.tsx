@@ -29,19 +29,19 @@ export function UserMenu({ currentUser }: { currentUser: Profile }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm shadow-sm hover:bg-slate-50"
+        className="flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-sm shadow-sm hover:bg-surface-2"
       >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
           {currentUser.full_name.charAt(0)}
         </span>
         <span className="font-medium">{currentUser.full_name}</span>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-ink-soft">
           {ROLE_LABEL[currentUser.role]}
         </span>
       </button>
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-48 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-          <div className="px-3 py-1.5 text-xs text-slate-400">{currentUser.email}</div>
+        <div className="absolute right-0 z-30 mt-2 w-48 overflow-hidden rounded-lg border border-line bg-surface py-1 shadow-lg">
+          <div className="px-3 py-1.5 text-xs text-muted">{currentUser.email}</div>
           <button
             onClick={logout}
             disabled={loggingOut}

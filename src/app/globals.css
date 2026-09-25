@@ -1,12 +1,16 @@
 @import "tailwindcss";
 
 /*
- * "Daybook" visual direction — cool graphite/paper neutrals with one warm
- * accent, tabular numbers for anything counting hours. The indigo-* scale
- * below is remapped wholesale so every existing `bg-indigo-600`,
- * `text-indigo-700`, etc. across the app picks up the new accent without
- * touching each call site individually.
+ * "Daybook" visual direction — cool graphite/paper neutrals with one
+ * indigo-violet accent, tabular numbers for anything counting hours.
+ * Dark mode is a manual toggle (not just OS preference), driven by
+ * [data-theme] on <html> — see ThemeToggle + the bootstrap script in
+ * layout.tsx. The indigo-* Tailwind scale is remapped wholesale so every
+ * existing `bg-indigo-600`, `text-indigo-700`, etc. across the app picks
+ * up the accent without touching each call site individually.
  */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --background: #eef1f4;
   --foreground: #10151f;
@@ -21,29 +25,76 @@
   --surface: #ffffff;
   --surface-2: #f5f7f8;
 
-  --accent-wash: #fbeaf3;
-  --accent-100: #f6d5e7;
-  --accent-200: #f0bfda;
-  --accent-300: #e39ac3;
-  --accent-400: #c767a0;
-  --accent-500: #b04987;
-  --accent: #a6317d;
-  --accent-strong: #8a2668;
-  --accent-800: #6e1e52;
-  --accent-900: #4a1637;
+  --accent-wash: #eeedf9;
+  --accent-100: #dcdaf2;
+  --accent-200: #c1bdea;
+  --accent-300: #a7a1e0;
+  --accent-400: #8b84d6;
+  --accent-500: #6f68cd;
+  --accent: #5b57c9;
+  --accent-strong: #4a47ab;
+  --accent-800: #3a3888;
+  --accent-900: #2a2966;
   --accent-ink: #ffffff;
 
-  --ok: #2fa36b;
-  --ok-wash: #e3f4ec;
+  --ok: #3f9d64;
+  --ok-wash: #e7f4ec;
   --info: #3b82c4;
   --info-wash: #e6f0f9;
-  --danger: #e15252;
+  --warn: #c9862c;
+  --warn-wash: #faf0e2;
+  --danger: #cf4f4f;
   --danger-strong: #c7413f;
-  --danger-wash: #fbe8e8;
+  --danger-wash: #f9e9e9;
   --holiday: #8a5fd6;
   --holiday-wash: #efe7fb;
   --leave: #d9822b;
   --leave-wash: #fdecd9;
+  --weekend-wash: #fef9c3;
+  --project-wash: #e6f3f5;
+}
+
+:root[data-theme="dark"] {
+  --background: #0d1015;
+  --foreground: #edeff2;
+  --border: #262c36;
+
+  --ink: #edeff2;
+  --ink-soft: #b7c0ca;
+  --muted: #8a93a0;
+  --line: #262c36;
+  --line-strong: #313847;
+  --paper: #0d1015;
+  --surface: #171b22;
+  --surface-2: #1d222b;
+
+  --accent-wash: #221f3d;
+  --accent-100: #2c295a;
+  --accent-200: #3c3878;
+  --accent-300: #514cad;
+  --accent-400: #6862c0;
+  --accent-500: #7873d3;
+  --accent: #8a86e6;
+  --accent-strong: #a29ef0;
+  --accent-800: #b8b4f5;
+  --accent-900: #dedcfa;
+  --accent-ink: #ffffff;
+
+  --ok: #3dbe82;
+  --ok-wash: #12281f;
+  --info: #5b9edb;
+  --info-wash: #101f2c;
+  --warn: #d9a24f;
+  --warn-wash: #33260f;
+  --danger: #f16a6a;
+  --danger-strong: #f58787;
+  --danger-wash: #2c1414;
+  --holiday: #a688e6;
+  --holiday-wash: #241d38;
+  --leave: #e0a052;
+  --leave-wash: #3a2a15;
+  --weekend-wash: #33300f;
+  --project-wash: #10262a;
 }
 
 @theme inline {
@@ -63,13 +114,17 @@
   --color-ok-wash: var(--ok-wash);
   --color-info: var(--info);
   --color-info-wash: var(--info-wash);
+  --color-warn: var(--warn);
+  --color-warn-wash: var(--warn-wash);
   --color-danger-strong: var(--danger-strong);
   --color-danger-wash: var(--danger-wash);
   --color-holiday: var(--holiday);
   --color-leave: var(--leave);
+  --color-project-wash: var(--project-wash);
 
   /* Remap the default indigo scale to the accent palette — every existing
-     indigo-* utility class across the app now renders in the new accent. */
+     indigo-* utility class across the app now renders in the new accent,
+     in both themes. */
   --color-indigo-50: var(--accent-wash);
   --color-indigo-100: var(--accent-100);
   --color-indigo-200: var(--accent-200);
@@ -86,6 +141,46 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+/* ---------- Status pills ---------- */
+/* Text stays plain ink — only the background carries a light, transparent
+   tint of the status color, plus a small solid dot for a second read. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+}
+.status-pill .status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-pill-to_do {
+  background: color-mix(in srgb, var(--muted) 15%, transparent);
+}
+.status-pill-to_do .status-dot {
+  background: var(--muted);
+}
+.status-pill-in_progress {
+  background: color-mix(in srgb, var(--warn) 20%, transparent);
+}
+.status-pill-in_progress .status-dot {
+  background: var(--warn);
+}
+.status-pill-hold {
+  background: color-mix(in srgb, var(--danger) 20%, transparent);
+}
+.status-pill-hold .status-dot {
+  background: var(--danger);
+}
+.status-pill-done {
+  background: color-mix(in srgb, var(--ok) 20%, transparent);
+}
+.status-pill-done .status-dot {
+  background: var(--ok);
 }
 
 .tabular {
@@ -142,15 +237,8 @@ body {
 }
 
 /* ---------- Date column tints ---------- */
-/* Weekend gets a hatch texture (not just a flat tint) so it reads
-   unambiguously against a plain weekday column even at a glance. */
 .col-weekend {
-  background-color: var(--surface-2);
-  background-image: repeating-linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--ink) 7%, transparent) 0 6px,
-    transparent 6px 13px
-  );
+  background-color: var(--weekend-wash);
 }
 
 /* The tracker always shows one person's tasks at a time (their own, or

@@ -81,10 +81,10 @@ export function ProjectSection({
   }
 
   return (
-    <div className="border-b border-slate-200">
-      <div className="flex bg-indigo-100/70">
+    <div className="border-b border-line">
+      <div className="flex bg-project-wash">
         <div
-          className="sticky left-0 z-10 flex shrink-0 items-center gap-2 bg-indigo-100/95 py-2.5 pl-3 pr-2 text-sm font-semibold text-indigo-900"
+          className="sticky left-0 z-10 flex shrink-0 items-center gap-2 bg-project-wash py-2.5 pl-3 pr-2 text-sm font-semibold text-ink"
           style={{ width: META_TOTAL_WIDTH }}
         >
           <button
@@ -109,7 +109,7 @@ export function ProjectSection({
                   setRenaming(false);
                 }
               }}
-              className="min-w-0 flex-1 rounded border border-indigo-300 bg-white px-1 py-0.5 text-sm font-semibold text-indigo-900 outline-none"
+              className="min-w-0 flex-1 rounded border border-indigo-300 bg-surface px-1 py-0.5 text-sm font-semibold text-ink outline-none"
             />
           ) : (
             <button
@@ -121,27 +121,27 @@ export function ProjectSection({
             </button>
           )}
           {canManage && !renaming && (
-            <span className="flex shrink-0 items-center gap-1 text-indigo-400">
+            <span className="flex shrink-0 items-center gap-1 text-muted">
               <button
                 onClick={() => {
                   setDraftName(projectName);
                   setRenaming(true);
                 }}
-                className="rounded p-0.5 transition-all duration-150 hover:bg-white/70 hover:text-indigo-700 active:scale-90"
+                className="rounded p-0.5 transition-all duration-150 hover:bg-surface/70 hover:text-indigo-700 active:scale-90"
                 title="Rename project"
               >
                 <Pencil size={13} />
               </button>
               <button
                 onClick={handleDeleteProject}
-                className="rounded p-0.5 transition-all duration-150 hover:bg-white/70 hover:text-red-600 active:scale-90"
+                className="rounded p-0.5 transition-all duration-150 hover:bg-surface/70 hover:text-red-600 active:scale-90"
                 title="Delete project"
               >
                 <Trash2 size={13} />
               </button>
             </span>
           )}
-          <span className="ml-auto shrink-0 text-xs font-normal text-indigo-500">
+          <span className="ml-auto shrink-0 text-xs font-normal text-muted">
             {tasks.length} task{tasks.length === 1 ? "" : "s"}
           </span>
         </div>
@@ -151,7 +151,7 @@ export function ProjectSection({
             return (
               <div
                 key={d.key}
-                className={`flex h-full items-center justify-center border-r border-indigo-200/60 text-xs font-medium text-indigo-800 ${dayTintClass(d)}`}
+                className={`flex h-full items-center justify-center border-r border-line text-xs font-medium text-ink-soft ${dayTintClass(d)}`}
                 style={{ width: DAY_WIDTH }}
               >
                 {total > 0 ? total : ""}

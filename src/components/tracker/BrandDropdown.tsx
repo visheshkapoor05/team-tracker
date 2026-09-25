@@ -57,7 +57,7 @@ export function BrandDropdown({
         ref={ref}
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
+        className="flex w-full items-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1 text-xs font-medium transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
       >
         <span className="truncate">{current?.name ?? "Select brand"}</span>
         {current?.status === "pending" && (
@@ -70,7 +70,7 @@ export function BrandDropdown({
             Rejected
           </span>
         )}
-        {!disabled && <ChevronDown size={12} className="ml-auto shrink-0 text-slate-400" />}
+        {!disabled && <ChevronDown size={12} className="ml-auto shrink-0 text-muted" />}
       </button>
       <DropdownPortal anchorRef={ref} open={open} onClose={close} width={224}>
         {approved.map((b, i) => (
@@ -81,12 +81,12 @@ export function BrandDropdown({
               close();
             }}
             style={{ animationDelay: `${Math.min(i, 6) * 20}ms` }}
-            className="dropdown-item-in block w-full truncate rounded-md px-2.5 py-1.5 text-left text-xs hover:bg-slate-50"
+            className="dropdown-item-in block w-full truncate rounded-md px-2.5 py-1.5 text-left text-xs hover:bg-surface-2"
           >
             {b.name}
           </button>
         ))}
-        <div className="my-1 border-t border-slate-100" />
+        <div className="my-1 border-t border-line" />
         {!adding ? (
           <button
             onClick={() => setAdding(true)}
@@ -103,7 +103,7 @@ export function BrandDropdown({
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitNew()}
               placeholder="Brand name"
-              className="w-full rounded border border-slate-200 px-1.5 py-1 text-xs outline-none focus:border-indigo-400 disabled:opacity-60"
+              className="w-full rounded border border-line px-1.5 py-1 text-xs outline-none focus:border-indigo-400 disabled:opacity-60"
             />
             <button
               onClick={submitNew}

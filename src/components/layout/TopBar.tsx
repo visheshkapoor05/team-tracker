@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Profile } from "@/lib/store/types";
 import { UserMenu } from "./UserMenu";
 import { NotificationBell } from "./NotificationBell";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function TopBar({ currentUser }: { currentUser: Profile }) {
   const pathname = usePathname();
@@ -15,12 +16,13 @@ export function TopBar({ currentUser }: { currentUser: Profile }) {
   ];
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
       <div className="flex items-center justify-between px-6 py-3">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900">Team Tracker</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-ink">Team Tracker</h1>
         </div>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <NotificationBell userId={currentUser.id} />
           <UserMenu currentUser={currentUser} />
         </div>
@@ -35,7 +37,7 @@ export function TopBar({ currentUser }: { currentUser: Profile }) {
               className={`rounded-t-md px-3 py-2 text-sm font-medium transition-colors ${
                 active
                   ? "border-b-2 border-indigo-600 text-indigo-700"
-                  : "border-b-2 border-transparent text-slate-500 hover:text-slate-800"
+                  : "border-b-2 border-transparent text-muted hover:text-ink"
               }`}
             >
               {tab.label}

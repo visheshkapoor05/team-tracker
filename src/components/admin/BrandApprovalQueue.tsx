@@ -23,23 +23,23 @@ export function BrandApprovalQueue({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <h2 className="mb-1 text-sm font-semibold text-slate-800">Brand Approval Queue</h2>
-      <p className="mb-4 text-xs text-slate-400">
+    <section className="rounded-xl border border-line bg-surface p-5">
+      <h2 className="mb-1 text-sm font-semibold text-ink">Brand Approval Queue</h2>
+      <p className="mb-4 text-xs text-muted">
         Requests raised from the tracker&apos;s brand dropdown land here.
       </p>
       {pending.length === 0 ? (
-        <p className="py-6 text-center text-sm text-slate-400">No pending brand requests.</p>
+        <p className="py-6 text-center text-sm text-muted">No pending brand requests.</p>
       ) : (
         <div className="flex flex-col gap-3">
           {pending.map((b) => (
             <div
               key={b.id}
-              className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3"
+              className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface-2 p-3"
             >
               <div className="min-w-40 flex-1">
-                <p className="text-sm font-medium text-slate-800">{b.name}</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-sm font-medium text-ink">{b.name}</p>
+                <p className="text-xs text-muted">
                   Requested by {profilesById[b.requested_by]?.full_name ?? "Unknown"} ·{" "}
                   {new Date(b.created_at).toLocaleDateString()}
                 </p>
@@ -48,7 +48,7 @@ export function BrandApprovalQueue({
                 placeholder="Edit name (optional)"
                 value={edits[b.id] ?? ""}
                 onChange={(e) => setEdits((prev) => ({ ...prev, [b.id]: e.target.value }))}
-                className="w-44 rounded-md border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-indigo-400"
+                className="w-44 rounded-md border border-line px-2 py-1.5 text-xs outline-none focus:border-indigo-400"
               />
               <button
                 disabled={busyId === b.id}

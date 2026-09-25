@@ -81,7 +81,7 @@ export function NotificationBell({ userId }: { userId: string }) {
       <div className="relative" ref={ref}>
         <button
           onClick={() => setOpen((v) => !v)}
-          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface shadow-sm hover:bg-surface-2"
           aria-label="Notifications"
         >
           <Bell size={16} />
@@ -92,12 +92,12 @@ export function NotificationBell({ userId }: { userId: string }) {
           )}
         </button>
         {open && (
-          <div className="absolute right-0 z-30 mt-2 max-h-96 w-80 overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-            <div className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+          <div className="absolute right-0 z-30 mt-2 max-h-96 w-80 overflow-y-auto rounded-lg border border-line bg-surface py-1 shadow-lg">
+            <div className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted">
               Notifications
             </div>
             {notifications.length === 0 && (
-              <div className="px-3 py-6 text-center text-sm text-slate-400">
+              <div className="px-3 py-6 text-center text-sm text-muted">
                 Nothing here yet.
               </div>
             )}
@@ -105,15 +105,15 @@ export function NotificationBell({ userId }: { userId: string }) {
               <button
                 key={n.id}
                 onClick={() => openNotification(n)}
-                className={`block w-full px-3 py-2 text-left text-sm hover:bg-slate-50 ${
-                  n.is_read ? "text-slate-500" : "font-medium text-slate-800"
+                className={`block w-full px-3 py-2 text-left text-sm hover:bg-surface-2 ${
+                  n.is_read ? "text-muted" : "font-medium text-ink"
                 }`}
               >
                 {!n.is_read && (
                   <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-indigo-500" />
                 )}
                 {n.message}
-                <span className="mt-0.5 block text-[11px] font-normal text-slate-400">
+                <span className="mt-0.5 block text-[11px] font-normal text-muted">
                   {new Date(n.created_at).toLocaleString()}
                 </span>
               </button>
@@ -125,7 +125,7 @@ export function NotificationBell({ userId }: { userId: string }) {
       {toast && (
         <button
           onClick={() => openNotification(toast)}
-          className="fixed bottom-6 right-6 z-50 max-w-sm rounded-lg border border-slate-200 bg-white p-4 text-left text-sm shadow-xl animate-[fadeIn_.2s_ease-out]"
+          className="fixed bottom-6 right-6 z-50 max-w-sm rounded-lg border border-line bg-surface p-4 text-left text-sm shadow-xl animate-[fadeIn_.2s_ease-out]"
         >
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-indigo-600">
             New notification
