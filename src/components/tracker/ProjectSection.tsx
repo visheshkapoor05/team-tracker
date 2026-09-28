@@ -6,7 +6,7 @@ import type { Brand, Profile, Task } from "@/lib/store/types";
 import { TaskRow, type DayInfo } from "./TaskRow";
 import { NewTaskRow } from "./NewTaskRow";
 import { DAY_WIDTH } from "./DateCell";
-import { META_TOTAL_WIDTH, dayTintClass } from "./gridConstants";
+import { META_TOTAL_WIDTH } from "./gridConstants";
 
 export function ProjectSection({
   projectName,
@@ -151,7 +151,7 @@ export function ProjectSection({
             return (
               <div
                 key={d.key}
-                className={`flex h-full items-center justify-center text-xs font-medium text-ink-soft ${dayTintClass(d)}`}
+                className="flex h-full items-center justify-center text-xs font-medium text-ink-soft"
                 style={{ width: DAY_WIDTH }}
               >
                 {total > 0 ? total : ""}
