@@ -151,7 +151,7 @@ export function ProjectSection({
             return (
               <div
                 key={d.key}
-                className={`flex h-full items-center justify-center border-r border-line text-xs font-medium text-ink-soft ${dayTintClass(d)}`}
+                className={`flex h-full items-center justify-center text-xs font-medium text-ink-soft ${dayTintClass(d)}`}
                 style={{ width: DAY_WIDTH }}
               >
                 {total > 0 ? total : ""}

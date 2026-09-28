@@ -51,7 +51,7 @@
   --leave: #d9822b;
   --leave-wash: #fdecd9;
   --weekend-wash: #fef9c3;
-  --project-wash: #e6f3f5;
+  --project-wash: color-mix(in srgb, var(--info) 8%, var(--surface));
 }
 
 :root[data-theme="dark"] {
@@ -94,7 +94,7 @@
   --leave: #e0a052;
   --leave-wash: #3a2a15;
   --weekend-wash: #33300f;
-  --project-wash: #10262a;
+  --project-wash: color-mix(in srgb, var(--info) 14%, var(--surface));
 }
 
 @theme inline {
