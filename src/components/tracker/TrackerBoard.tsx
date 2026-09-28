@@ -415,7 +415,7 @@ export function TrackerBoard({
               {days.map((d) => (
                 <div
                   key={d.key}
-                  className={`flex h-full shrink-0 items-center justify-center border-r border-line text-xs font-medium text-muted ${dayTintClass(d)}`}
+                  className={`relative flex h-full shrink-0 items-center justify-center text-xs font-medium text-muted after:absolute after:right-0 after:top-1.5 after:bottom-1.5 after:w-px after:bg-line after:content-[''] ${dayTintClass(d)}`}
                   style={{ width: DAY_WIDTH }}
                   title={d.isLeave ? "Leave" : d.isHoliday ? "Holiday" : d.isWeekend ? "Weekend" : undefined}
                 >
@@ -439,7 +439,7 @@ export function TrackerBoard({
                   return (
                     <div
                       key={d.key}
-                      className={`flex h-full items-center justify-center border-r border-line text-xs font-semibold text-ink ${dayTintClass(d)}`}
+                      className={`relative flex h-full items-center justify-center text-xs font-semibold text-ink after:absolute after:right-0 after:top-1.5 after:bottom-1.5 after:w-px after:bg-line after:content-[''] ${dayTintClass(d)}`}
                       style={{ width: DAY_WIDTH }}
                     >
                       {total > 0 ? total : ""}
