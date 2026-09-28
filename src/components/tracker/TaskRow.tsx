@@ -11,6 +11,7 @@ import { META_COLUMNS } from "./gridConstants";
 export interface DayInfo {
   key: string;
   day: number;
+  weekdayLabel: string;
   isWeekend: boolean;
   // Scoped to whichever person's tracker is currently being viewed — the
   // grid always shows exactly one person's tasks at a time, so this is
@@ -52,9 +53,13 @@ export function TaskRow({
   registerCellRef?: (dateKey: string) => (el: HTMLInputElement | null) => void;
   onNavigate?: (dateKey: string, direction: "up" | "down" | "left" | "right") => void;
 }) {
-  const rowClass = task.status === "done" ? "row-done" : task.status === "hold" ? "row-hold" : "";
-  const metaBgClass =
-    task.status === "done" ? "bg-surface-2" : task.status === "hold" ? "row-hold bg-surface" : "bg-surface";
+  const rowClass = task.status === "done" ? "row-done" : "";
+  const metaBgClass = task.status === "done" ? "bg-surface-2" : "bg-surface";
+  // Date cells are opaque (bg-surface) so they don't fall through to the
+  // page background, which means hold's pulsing background would be hidden
+  // behind them if it were set on the row like done's dimming is. It's
+  // rendered as a full-row overlay instead (see below), painting on top of
+  // everything including the sticky meta section.
 
   // A one-shot flash across the whole row the moment status actually
   // changes to Done or Hold — separate from row-done/row-hold's persistent
@@ -94,6 +99,7 @@ export function TaskRow({
 
   return (
     <div className={`relative flex border-b border-line ${rowClass}`}>
+      {task.status === "hold" && <div className="pointer-events-none absolute inset-0 z-20 row-hold" />}
       {flashClass && <div className={`pointer-events-none absolute inset-0 z-20 ${flashClass}`} />}
       <div className={`sticky left-0 z-10 flex shrink-0 ${metaBgClass}`}>
         <div

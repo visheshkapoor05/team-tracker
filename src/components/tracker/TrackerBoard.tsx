@@ -123,6 +123,7 @@ export function TrackerBoard({
       list.push({
         key,
         day,
+        weekdayLabel: new Date(year, month, day).toLocaleDateString("en-US", { weekday: "short" }),
         isWeekend: isWeekend(year, month, day),
         isHoliday: viewedHolidayDates.has(key),
         isLeave: viewedLeaveDates.has(key),
@@ -415,11 +416,14 @@ export function TrackerBoard({
               {days.map((d) => (
                 <div
                   key={d.key}
-                  className={`relative flex h-full shrink-0 items-center justify-center text-xs font-medium text-muted after:absolute after:right-0 after:top-1.5 after:bottom-1.5 after:w-px after:bg-line after:content-[''] ${dayTintClass(d)}`}
+                  className={`relative flex h-full shrink-0 flex-col items-center justify-center gap-0.5 py-1 text-xs font-medium text-muted after:absolute after:right-0 after:top-1.5 after:bottom-1.5 after:w-px after:bg-line after:content-[''] ${dayTintClass(d)}`}
                   style={{ width: DAY_WIDTH }}
                   title={d.isLeave ? "Leave" : d.isHoliday ? "Holiday" : d.isWeekend ? "Weekend" : undefined}
                 >
-                  {d.day}
+                  <span className="text-[9px] font-semibold uppercase tracking-wide text-muted">
+                    {d.weekdayLabel}
+                  </span>
+                  <span>{d.day}</span>
                 </div>
               ))}
             </div>

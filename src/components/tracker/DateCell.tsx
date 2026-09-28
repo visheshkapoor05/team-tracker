@@ -49,7 +49,10 @@ export function DateCell({
     if (n !== hours) onChangeHours(Math.max(0, Math.min(24, n)));
   }
 
-  const bg = isLeave ? "cell-leave" : isHoliday ? "cell-holiday" : isWeekend ? "col-weekend" : "";
+  // An untinted cell must still be explicitly white — otherwise it falls
+  // through to whatever's behind the row (the page background), which reads
+  // as an unwanted grey fill on every ordinary day.
+  const bg = isLeave ? "cell-leave" : isHoliday ? "cell-holiday" : isWeekend ? "col-weekend" : "bg-surface";
 
   return (
     <div
