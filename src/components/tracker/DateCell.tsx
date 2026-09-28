@@ -53,7 +53,7 @@ export function DateCell({
 
   return (
     <div
-      className={`relative flex h-9 shrink-0 items-center justify-center border-b border-r border-line ${bg}`}
+      className={`relative flex h-9 shrink-0 items-center justify-center border-r border-line ${bg}`}
       style={{ width: DAY_WIDTH }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
