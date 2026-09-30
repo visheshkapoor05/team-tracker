@@ -258,6 +258,23 @@ body {
   background-color: var(--leave-wash) !important;
 }
 
+/* Half-day leave: a diagonal upper-left wash over the cell's normal
+   background, cut corner-to-corner (top-right to bottom-left) so the
+   lower-right stays untinted — reads as "half" at a glance. Negative
+   z-index keeps it under the cell's own content (input/text) while still
+   painting above the cell's plain background. */
+.cell-half-leave {
+  position: relative;
+}
+.cell-half-leave::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--leave-wash);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
 /* ---------- Dropdown / menu entrance ---------- */
 @keyframes dropdown-pop {
   from {

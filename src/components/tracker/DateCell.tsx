@@ -3,29 +3,32 @@
 import { useRef, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownPortal } from "@/components/ui/DropdownPortal";
+import type { LeaveType } from "@/lib/store/types";
 
 export const DAY_WIDTH = 40;
 
 export function DateCell({
   hours,
   isLeave,
+  isHalfLeave,
   isWeekend,
   isHoliday,
   editable,
   canToggleLeave,
   onChangeHours,
-  onToggleLeave,
+  onSetLeave,
   inputRef,
   onNavigate,
 }: {
   hours: number | undefined;
   isLeave: boolean;
+  isHalfLeave: boolean;
   isWeekend: boolean;
   isHoliday: boolean;
   editable: boolean;
   canToggleLeave: boolean;
   onChangeHours: (hours: number) => void;
-  onToggleLeave: () => void;
+  onSetLeave: (type: LeaveType) => void;
   inputRef?: (el: HTMLInputElement | null) => void;
   onNavigate?: (direction: "up" | "down" | "left" | "right") => void;
 }) {
@@ -51,8 +54,34 @@ export function DateCell({
 
   // An untinted cell must still be explicitly white — otherwise it falls
   // through to whatever's behind the row (the page background), which reads
-  // as an unwanted grey fill on every ordinary day.
-  const bg = isLeave ? "cell-leave" : isHoliday ? "cell-holiday" : isWeekend ? "col-weekend" : "bg-surface";
+  // as an unwanted grey fill on every ordinary day. Half-day leave keeps the
+  // normal background and layers a diagonal wash on top (see .cell-half-leave)
+  // rather than replacing it, since the cell still behaves like a normal
+  // editable day.
+  const bg = isLeave
+    ? "cell-leave"
+    : isHalfLeave
+      ? "cell-half-leave bg-surface"
+      : isHoliday
+        ? "cell-holiday"
+        : isWeekend
+          ? "col-weekend"
+          : "bg-surface";
+
+  const menuItems: { label: string; type: LeaveType }[] = isLeave
+    ? [
+        { label: "Mark half-day leave", type: "half" },
+        { label: "Clear leave", type: "none" },
+      ]
+    : isHalfLeave
+      ? [
+          { label: "Mark full-day leave", type: "full" },
+          { label: "Clear leave", type: "none" },
+        ]
+      : [
+          { label: "Mark as leave", type: "full" },
+          { label: "Mark half-day leave", type: "half" },
+        ];
 
   return (
     <div
@@ -89,8 +118,8 @@ export function DateCell({
             }
           }}
           inputMode="decimal"
-          className="tabular h-full w-full bg-transparent text-center text-xs outline-none transition-all duration-150 focus:bg-indigo-50 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-400 disabled:cursor-not-allowed"
-          placeholder=""
+          className="tabular h-full w-full bg-transparent text-center text-xs outline-none transition-all duration-150 focus:bg-indigo-50 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-400 disabled:cursor-not-allowed placeholder:text-[8px] placeholder:text-leave"
+          placeholder={isHalfLeave ? "Half leave" : ""}
         />
       )}
       {canToggleLeave && (hover || menuOpen) && (
@@ -106,18 +135,21 @@ export function DateCell({
         anchorRef={menuBtnRef}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        width={128}
+        width={150}
         align="right"
       >
-        <button
-          onClick={() => {
-            onToggleLeave();
-            setMenuOpen(false);
-          }}
-          className="dropdown-item-in block w-full rounded-md px-2.5 py-1.5 text-left text-xs hover:bg-surface-2"
-        >
-          {isLeave ? "Clear leave" : "Mark as leave"}
-        </button>
+        {menuItems.map((item) => (
+          <button
+            key={item.type}
+            onClick={() => {
+              onSetLeave(item.type);
+              setMenuOpen(false);
+            }}
+            className="dropdown-item-in block w-full rounded-md px-2.5 py-1.5 text-left text-xs hover:bg-surface-2"
+          >
+            {item.label}
+          </button>
+        ))}
       </DropdownPortal>
     </div>
   );

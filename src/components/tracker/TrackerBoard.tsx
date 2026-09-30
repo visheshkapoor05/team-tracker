@@ -7,6 +7,7 @@ import type {
   Brand,
   Holiday,
   Leave,
+  LeaveType,
   Profile,
   Project,
   Task,
@@ -110,7 +111,15 @@ export function TrackerBoard({
   const viewedLeaveDates = useMemo(() => {
     const set = new Set<string>();
     for (const l of leaves) {
-      if (l.profile_id === viewingProfileId) set.add(l.leave_date);
+      if (l.profile_id === viewingProfileId && !l.is_half_day) set.add(l.leave_date);
+    }
+    return set;
+  }, [leaves, viewingProfileId]);
+
+  const viewedHalfLeaveDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const l of leaves) {
+      if (l.profile_id === viewingProfileId && l.is_half_day) set.add(l.leave_date);
     }
     return set;
   }, [leaves, viewingProfileId]);
@@ -127,10 +136,11 @@ export function TrackerBoard({
         isWeekend: isWeekend(year, month, day),
         isHoliday: viewedHolidayDates.has(key),
         isLeave: viewedLeaveDates.has(key),
+        isHalfLeave: viewedHalfLeaveDates.has(key),
       });
     }
     return list;
-  }, [year, month, viewedHolidayDates, viewedLeaveDates]);
+  }, [year, month, viewedHolidayDates, viewedLeaveDates, viewedHalfLeaveDates]);
 
   const entriesByTask = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
@@ -153,6 +163,14 @@ export function TrackerBoard({
   const viewedTasks = useMemo(
     () => tasks.filter((t) => t.owner_id === viewingProfileId),
     [tasks, viewingProfileId]
+  );
+  // Projects are employee-level, same as tasks: only the ones belonging to
+  // whichever profile's tracker is open should render. The initial fetch is
+  // already scoped for employees; managers/leads fetch everyone's and need
+  // this client-side filter to switch between them.
+  const visibleProjects = useMemo(
+    () => projects.filter((p) => p.created_by === viewingProfileId),
+    [projects, viewingProfileId]
   );
   const canCreateForViewedPerson = viewingProfileId === currentUser.id || canManage;
 
@@ -243,34 +261,23 @@ export function TrackerBoard({
     });
   }
 
-  async function toggleLeave(profileId: string, date: string) {
+  async function setLeaveType(profileId: string, date: string, type: LeaveType) {
     const res = await fetch("/api/leaves", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile_id: profileId, leave_date: date }),
+      body: JSON.stringify({ profile_id: profileId, leave_date: date, type }),
     });
     if (!res.ok) {
       const { error } = await res.json();
       alert(error ?? "Could not update leave");
       return;
     }
-    const { marked } = await res.json();
+    const { leave } = (await res.json()) as { leave: Leave | null };
     setLeaves((prev) => {
-      if (marked) {
-        return [
-          ...prev,
-          {
-            id: `${profileId}-${date}`,
-            profile_id: profileId,
-            leave_date: date,
-            hours: 8,
-            created_at: new Date().toISOString(),
-          },
-        ];
-      }
-      return prev.filter((l) => !(l.profile_id === profileId && l.leave_date === date));
+      const withoutExisting = prev.filter((l) => !(l.profile_id === profileId && l.leave_date === date));
+      return leave ? [...withoutExisting, leave] : withoutExisting;
     });
-    if (marked) {
+    if (type === "full") {
       const ownedTaskIds = tasks.filter((t) => t.owner_id === profileId).map((t) => t.id);
       setEntries((prev) =>
         prev.filter((e) => !(ownedTaskIds.includes(e.task_id) && e.entry_date === date))
@@ -312,7 +319,7 @@ export function TrackerBoard({
     const res = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, owner_id: viewingProfileId }),
     });
     if (!res.ok) {
       const { error } = await res.json();
@@ -418,7 +425,17 @@ export function TrackerBoard({
                   key={d.key}
                   className={`relative flex h-full shrink-0 flex-col items-center justify-center gap-0.5 py-1 text-xs font-medium text-muted after:absolute after:right-0 after:top-1.5 after:bottom-1.5 after:w-px after:bg-line after:content-[''] ${dayTintClass(d)}`}
                   style={{ width: DAY_WIDTH }}
-                  title={d.isLeave ? "Leave" : d.isHoliday ? "Holiday" : d.isWeekend ? "Weekend" : undefined}
+                  title={
+                    d.isLeave
+                      ? "Leave"
+                      : d.isHalfLeave
+                        ? "Half-day leave"
+                        : d.isHoliday
+                          ? "Holiday"
+                          : d.isWeekend
+                            ? "Weekend"
+                            : undefined
+                  }
                 >
                   <span className="text-[9px] font-semibold uppercase tracking-wide text-muted">
                     {d.weekdayLabel}
@@ -429,7 +446,7 @@ export function TrackerBoard({
             </div>
           </div>
 
-          {projects.length > 0 && (
+          {visibleProjects.length > 0 && (
             <div className="flex border-b border-line bg-surface-2">
               <div
                 className="sticky left-0 z-10 flex shrink-0 items-center bg-surface-2 py-2.5 pl-3 pr-2 text-sm font-semibold text-ink"
@@ -454,13 +471,13 @@ export function TrackerBoard({
             </div>
           )}
 
-          {projects.length === 0 && (
+          {visibleProjects.length === 0 && (
             <div className="p-10 text-center text-sm text-muted">
               No projects yet. Create one to get started.
             </div>
           )}
 
-          {projects.map((project) => (
+          {visibleProjects.map((project) => (
             <ProjectSection
               key={project.id}
               projectName={project.name}
@@ -473,7 +490,7 @@ export function TrackerBoard({
               canCreateTask={canCreateForViewedPerson}
               onUpdateTask={updateTask}
               onChangeHours={changeHours}
-              onToggleLeave={toggleLeave}
+              onSetLeave={setLeaveType}
               onRequestNewBrand={requestNewBrand}
               onOpenComments={setCommentsTask}
               onCreateTask={(input) => createTask(project.id, input)}

@@ -1,6 +1,6 @@
 import { requireCurrentUser } from "@/lib/auth";
 import {
-  listProjects,
+  listVisibleProjects,
   listVisibleTasks,
   listEntriesForTasks,
   listLeaves,
@@ -14,7 +14,7 @@ import { TrackerBoard } from "@/components/tracker/TrackerBoard";
 export default async function TrackerPage() {
   const currentUser = await requireCurrentUser();
   const [projects, tasks, leaves, holidays, brands, profiles, commentCounts] = await Promise.all([
-    listProjects(),
+    listVisibleProjects(currentUser),
     listVisibleTasks(currentUser),
     listLeaves(),
     listHolidays(),

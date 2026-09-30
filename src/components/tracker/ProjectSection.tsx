@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, Pencil, Trash2 } from "lucide-react";
-import type { Brand, Profile, Task } from "@/lib/store/types";
+import type { Brand, LeaveType, Profile, Task } from "@/lib/store/types";
 import { TaskRow, type DayInfo } from "./TaskRow";
 import { NewTaskRow } from "./NewTaskRow";
 import { DAY_WIDTH } from "./DateCell";
@@ -19,7 +19,7 @@ export function ProjectSection({
   canCreateTask,
   onUpdateTask,
   onChangeHours,
-  onToggleLeave,
+  onSetLeave,
   onRequestNewBrand,
   onOpenComments,
   onCreateTask,
@@ -39,7 +39,7 @@ export function ProjectSection({
   canCreateTask: boolean;
   onUpdateTask: (taskId: string, patch: Partial<Task>) => void;
   onChangeHours: (taskId: string, date: string, hours: number) => void;
-  onToggleLeave: (profileId: string, date: string) => void;
+  onSetLeave: (profileId: string, date: string, type: LeaveType) => void;
   onRequestNewBrand: (name: string) => Promise<string | null>;
   onOpenComments: (task: Task) => void;
   onCreateTask: (input: { name: string; brand_id: string }) => Promise<void>;
@@ -175,7 +175,7 @@ export function ProjectSection({
               commentCount={commentCounts[task.id] ?? 0}
               onUpdateTask={(patch) => onUpdateTask(task.id, patch)}
               onChangeHours={(date, hours) => onChangeHours(task.id, date, hours)}
-              onToggleLeave={(date) => onToggleLeave(task.owner_id, date)}
+              onSetLeave={(date, type) => onSetLeave(task.owner_id, date, type)}
               onRequestNewBrand={onRequestNewBrand}
               onOpenComments={() => onOpenComments(task)}
               onDeleteTask={() => onDeleteTask(task.id)}

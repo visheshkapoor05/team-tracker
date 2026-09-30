@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MessageCircle, Pencil, Trash2 } from "lucide-react";
-import type { Brand, Task, TaskStatus } from "@/lib/store/types";
+import type { Brand, LeaveType, Task, TaskStatus } from "@/lib/store/types";
 import { StatusDropdown } from "./StatusDropdown";
 import { BrandDropdown } from "./BrandDropdown";
 import { DateCell, DAY_WIDTH } from "./DateCell";
@@ -18,6 +18,7 @@ export interface DayInfo {
   // unambiguous across every row.
   isHoliday: boolean;
   isLeave: boolean;
+  isHalfLeave: boolean;
 }
 
 export function TaskRow({
@@ -30,7 +31,7 @@ export function TaskRow({
   commentCount,
   onUpdateTask,
   onChangeHours,
-  onToggleLeave,
+  onSetLeave,
   onRequestNewBrand,
   onOpenComments,
   onDeleteTask,
@@ -46,7 +47,7 @@ export function TaskRow({
   commentCount: number;
   onUpdateTask: (patch: Partial<Task>) => void;
   onChangeHours: (date: string, hours: number) => void;
-  onToggleLeave: (date: string) => void;
+  onSetLeave: (date: string, type: LeaveType) => void;
   onRequestNewBrand: (name: string) => Promise<string | null>;
   onOpenComments: () => void;
   onDeleteTask: () => void;
@@ -217,12 +218,13 @@ export function TaskRow({
             key={d.key}
             hours={hoursByDate[d.key]}
             isLeave={d.isLeave}
+            isHalfLeave={d.isHalfLeave}
             isWeekend={d.isWeekend}
             isHoliday={d.isHoliday}
             editable={canEdit && !d.isLeave}
             canToggleLeave={canToggleLeave}
             onChangeHours={(h) => onChangeHours(d.key, h)}
-            onToggleLeave={() => onToggleLeave(d.key)}
+            onSetLeave={(type) => onSetLeave(d.key, type)}
             inputRef={registerCellRef?.(d.key)}
             onNavigate={(direction) => onNavigate?.(d.key, direction)}
           />

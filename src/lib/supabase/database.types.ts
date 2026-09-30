@@ -141,15 +141,23 @@ export interface Database {
         Relationships: [];
       };
       leaves: {
-        Row: { id: string; profile_id: string; leave_date: string; hours: number; created_at: string };
+        Row: {
+          id: string;
+          profile_id: string;
+          leave_date: string;
+          hours: number;
+          is_half_day: boolean;
+          created_at: string;
+        };
         Insert: {
           id?: string;
           profile_id: string;
           leave_date: string;
           hours?: number;
+          is_half_day?: boolean;
           created_at?: string;
         };
-        Update: { hours?: number };
+        Update: { hours?: number; is_half_day?: boolean };
         Relationships: [];
       };
       holidays: {

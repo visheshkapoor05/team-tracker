@@ -1,5 +1,7 @@
 export type Role = "employee" | "lead" | "manager";
 
+export type LeaveType = "full" | "half" | "none";
+
 export type TaskStatus = "to_do" | "in_progress" | "hold" | "done";
 
 export type BrandStatus = "pending" | "approved" | "rejected";
@@ -64,6 +66,7 @@ export interface Leave {
   profile_id: string;
   leave_date: string;
   hours: number;
+  is_half_day: boolean;
   created_at: string;
 }
 

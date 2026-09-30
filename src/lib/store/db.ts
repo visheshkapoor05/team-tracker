@@ -16,6 +16,7 @@ import type {
   OrgSettings,
   Role,
   TaskStatus,
+  LeaveType,
 } from "./types";
 import { TASK_STATUSES } from "./types";
 
@@ -313,6 +314,9 @@ export async function updateStaleTaskReminderDays(
 
 // ---------- Projects ----------
 
+// Unscoped — every project regardless of owner. Only safe to expose to
+// managers/leads (e.g. the cross-employee allocation matrix); the tracker
+// itself must use listVisibleProjects below.
 export async function listProjects(): Promise<Project[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -323,10 +327,29 @@ export async function listProjects(): Promise<Project[]> {
   return data ?? [];
 }
 
+// Projects are employee-level, same as tasks: an employee only sees
+// projects that belong to them (created_by), while managers/leads see
+// everyone's.
+export async function listVisibleProjects(actingUser: Profile): Promise<Project[]> {
+  const supabase = await createClient();
+  let query = supabase.from("projects").select("*");
+  if (!canViewAll(actingUser)) query = query.eq("created_by", actingUser.id);
+  const { data, error } = await query.order("created_at", { ascending: false });
+  throwIfError(error);
+  return data ?? [];
+}
+
 export async function createProject(
   actingUser: Profile,
-  input: { name: string; start_date: string; end_date: string }
+  input: { name: string; start_date: string; end_date: string; owner_id?: string }
 ): Promise<Project> {
+  // created_by doubles as the owning employee (mirrors tasks.owner_id),
+  // not necessarily who clicked the button — a manager creating a project
+  // while viewing someone else's tracker creates it for that person.
+  const ownerId = input.owner_id ?? actingUser.id;
+  if (ownerId !== actingUser.id && !isManager(actingUser)) {
+    throw new ForbiddenError("Only managers can create projects for other people");
+  }
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("projects")
@@ -334,7 +357,7 @@ export async function createProject(
       name: input.name.trim(),
       start_date: input.start_date,
       end_date: input.end_date,
-      created_by: actingUser.id,
+      created_by: ownerId,
     })
     .select()
     .single();
@@ -477,11 +500,11 @@ export async function setTaskHours(
 
   const { data: leave } = await supabase
     .from("leaves")
-    .select("id")
+    .select("id, is_half_day")
     .eq("profile_id", task.owner_id)
     .eq("leave_date", entryDate)
     .maybeSingle();
-  if (leave) {
+  if (leave && !leave.is_half_day) {
     throw new Error("This date is marked as leave for this person and can't be logged against");
   }
 
@@ -512,42 +535,47 @@ export async function listLeaves(): Promise<Leave[]> {
   return data ?? [];
 }
 
-export async function toggleLeave(
+export async function setLeave(
   actingUser: Profile,
   profileId: string,
-  leaveDate: string
-): Promise<{ marked: boolean }> {
+  leaveDate: string,
+  type: LeaveType
+): Promise<{ leave: Leave | null }> {
   if (profileId !== actingUser.id && !isManager(actingUser)) {
     throw new ForbiddenError("Not authorized to mark leave for this person");
   }
   const supabase = await createClient();
-  const { data: existing } = await supabase
-    .from("leaves")
-    .select("id")
-    .eq("profile_id", profileId)
-    .eq("leave_date", leaveDate)
-    .maybeSingle();
 
-  if (existing) {
-    await supabase.from("leaves").delete().eq("id", existing.id);
-    return { marked: false };
+  if (type === "none") {
+    await supabase.from("leaves").delete().eq("profile_id", profileId).eq("leave_date", leaveDate);
+    return { leave: null };
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("leaves")
-    .insert({ profile_id: profileId, leave_date: leaveDate, hours: 8 });
+    .upsert(
+      { profile_id: profileId, leave_date: leaveDate, hours: type === "full" ? 8 : 4, is_half_day: type === "half" },
+      { onConflict: "profile_id,leave_date" }
+    )
+    .select()
+    .single();
   throwIfError(error);
 
-  const { data: ownedTasks } = await supabase.from("tasks").select("id").eq("owner_id", profileId);
-  const ownedTaskIds = (ownedTasks ?? []).map((t) => t.id);
-  if (ownedTaskIds.length > 0) {
-    await supabase
-      .from("task_daily_entries")
-      .delete()
-      .eq("entry_date", leaveDate)
-      .in("task_id", ownedTaskIds);
+  // Full-day leave blocks hour entry entirely, so any hours already logged
+  // for the date need clearing. Half-day leave leaves hour entry open, so
+  // nothing to clear there.
+  if (type === "full") {
+    const { data: ownedTasks } = await supabase.from("tasks").select("id").eq("owner_id", profileId);
+    const ownedTaskIds = (ownedTasks ?? []).map((t) => t.id);
+    if (ownedTaskIds.length > 0) {
+      await supabase
+        .from("task_daily_entries")
+        .delete()
+        .eq("entry_date", leaveDate)
+        .in("task_id", ownedTaskIds);
+    }
   }
-  return { marked: true };
+  return { leave: data };
 }
 
 // ---------- Comments ----------

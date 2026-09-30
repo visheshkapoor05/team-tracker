@@ -10,12 +10,19 @@ export const META_COLUMNS = [
 export const META_TOTAL_WIDTH = META_COLUMNS.reduce((sum, c) => sum + c.width, 0);
 
 /**
- * Precedence for date-column tinting: leave > holiday > weekend. The tracker
- * always shows one person's tasks at a time, so this is unambiguous whether
- * it's applied to a header cell, a project's aggregate band, or a task row.
+ * Precedence for date-column tinting: leave > half-day leave > holiday >
+ * weekend. The tracker always shows one person's tasks at a time, so this
+ * is unambiguous whether it's applied to a header cell, a project's
+ * aggregate band, or a task row.
  */
-export function dayTintClass(d: { isLeave: boolean; isHoliday: boolean; isWeekend: boolean }): string {
+export function dayTintClass(d: {
+  isLeave: boolean;
+  isHalfLeave: boolean;
+  isHoliday: boolean;
+  isWeekend: boolean;
+}): string {
   if (d.isLeave) return "cell-leave";
+  if (d.isHalfLeave) return "cell-half-leave";
   if (d.isHoliday) return "cell-holiday";
   if (d.isWeekend) return "col-weekend";
   return "";
