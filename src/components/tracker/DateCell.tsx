@@ -89,7 +89,7 @@ export function DateCell({
             }
           }}
           inputMode="decimal"
-          className="tabular h-full w-full bg-transparent text-center text-xs outline-none transition-all duration-150 focus:bg-indigo-50 focus:ring-2 focus:ring-inset focus:ring-indigo-400 disabled:cursor-not-allowed"
+          className="tabular h-full w-full bg-transparent text-center text-xs outline-none transition-all duration-150 focus:bg-indigo-50 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-400 disabled:cursor-not-allowed"
           placeholder=""
         />
       )}
