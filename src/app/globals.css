@@ -204,7 +204,13 @@ body {
 }
 
 .row-done {
-  transition: background-color 380ms ease, opacity 380ms ease;
+  /* background-color intentionally not transitioned: it depends on an
+     unregistered custom property (--ok-wash) that changes value when the
+     theme is toggled, and transitioning a property whose value comes from
+     a custom property can leave it stuck at the pre-change color instead
+     of picking up the new one. Opacity has no such dependency and is safe
+     to animate. */
+  transition: opacity 380ms ease;
   opacity: 0.6;
   background-color: var(--ok-wash);
 }
