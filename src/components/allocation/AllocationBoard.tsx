@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -36,6 +36,20 @@ const PALETTE = [
   "#14B8A6",
 ];
 const LEAVE_COLOR = "#94A3B8";
+
+async function exportBrandAllocationToExcel(
+  rows: { name: string; hours: number; pct: number }[],
+  filename: string
+) {
+  const XLSX = await import("xlsx");
+  const sheet = XLSX.utils.json_to_sheet(
+    rows.map((r) => ({ Brand: r.name, Hours: r.hours, "% of month": r.pct }))
+  );
+  sheet["!cols"] = [{ wch: 20 }, { wch: 10 }, { wch: 12 }];
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, "Brand allocation");
+  XLSX.writeFile(workbook, filename);
+}
 
 type AllocationSummary = {
   totalWorkingHours: number;
@@ -369,7 +383,20 @@ export function AllocationBoard({
       </section>
 
       <section className="rounded-xl border border-line bg-surface p-5">
-        <h2 className="mb-1 text-sm font-semibold text-ink">My brand-wise allocation</h2>
+        <div className="mb-1 flex items-start justify-between gap-3">
+          <h2 className="text-sm font-semibold text-ink">My brand-wise allocation</h2>
+          <button
+            onClick={() =>
+              exportBrandAllocationToExcel(
+                selfSummary.brandAllocationRows,
+                `my-brand-allocation-${monthPrefix}.xlsx`
+              )
+            }
+            className="flex shrink-0 items-center gap-1.5 rounded-md border border-line px-2 py-1 text-xs font-medium text-ink-soft transition-all duration-150 hover:border-line-strong hover:bg-surface-2 hover:text-ink active:scale-95"
+          >
+            <Download size={12} /> Download Excel
+          </button>
+        </div>
         <p className="mb-4 text-xs text-muted">
           Every brand plus Leave, as a % of your {selfSummary.totalWorkingHours}h working hours
           this month. Bench is auto-computed as whatever&apos;s left over — it isn&apos;t a real
