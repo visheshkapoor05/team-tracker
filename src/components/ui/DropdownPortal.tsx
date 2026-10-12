@@ -69,16 +69,24 @@ export function DropdownPortal({
       if (contentRef.current?.contains(target)) return;
       onClose();
     }
-    function handleScrollOrResize() {
+    function handleScroll(e: Event) {
+      // Capture-phase 'scroll' on window also fires for scrolling *inside*
+      // the dropdown's own content (it has overflow-y-auto for long lists)
+      // — without this check, scrolling the list's scrollbar closed it
+      // immediately instead of scrolling.
+      if (contentRef.current?.contains(e.target as Node)) return;
+      onClose();
+    }
+    function handleResize() {
       onClose();
     }
     document.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("scroll", handleScrollOrResize, true);
-    window.addEventListener("resize", handleScrollOrResize);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleResize);
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("scroll", handleScrollOrResize, true);
-      window.removeEventListener("resize", handleScrollOrResize);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleResize);
     };
   }, [open, onClose, anchorRef]);
 

@@ -119,32 +119,31 @@ export async function listBrands(): Promise<Brand[]> {
   return data ?? [];
 }
 
-// Belt-and-suspenders against double-submits (slow network + no visible
-// loading state can make an impatient user click twice for real, seconds
-// apart — this isn't just a sub-millisecond race). If the same person just
-// created a brand with this exact name, reuse it instead of inserting again.
-async function findRecentDuplicateBrand(
+// A brand name is unique case- and whitespace-insensitively (also enforced
+// by the brands_unique_name_ci index in the DB — this is the friendly,
+// pre-check half of that belt-and-suspenders pair). Used both to silently
+// reuse an existing brand instead of creating a duplicate, and to block a
+// rename/approval-edit that would collide with one.
+async function findBrandByName(
   supabase: Awaited<ReturnType<typeof createClient>>,
   name: string,
-  requestedBy: string
+  excludeId?: string
 ): Promise<Brand | null> {
-  const cutoff = new Date(Date.now() - 15_000).toISOString();
-  const { data } = await supabase
-    .from("brands")
-    .select("*")
-    .eq("requested_by", requestedBy)
-    .ilike("name", name)
-    .gte("created_at", cutoff)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data ?? null;
+  const { data, error } = await supabase.from("brands").select("*");
+  throwIfError(error);
+  const target = name.trim().toLowerCase();
+  return (data ?? []).find((b) => b.id !== excludeId && b.name.trim().toLowerCase() === target) ?? null;
+}
+
+function friendlyBrandInsertError(error: { code?: string; message: string }): Error {
+  if (error.code === "23505") return new Error("A brand with this name already exists");
+  return new Error(error.message);
 }
 
 export async function requestBrand(actingUser: Profile, name: string): Promise<Brand> {
   const trimmedName = name.trim();
   const supabase = await createClient();
-  const duplicate = await findRecentDuplicateBrand(supabase, trimmedName, actingUser.id);
+  const duplicate = await findBrandByName(supabase, trimmedName);
   if (duplicate) return duplicate;
 
   const { data, error } = await supabase
@@ -152,7 +151,8 @@ export async function requestBrand(actingUser: Profile, name: string): Promise<B
     .insert({ name: trimmedName, status: "pending", requested_by: actingUser.id })
     .select()
     .single();
-  const brand = single(data, error);
+  if (error) throw friendlyBrandInsertError(error);
+  const brand = data as Brand;
 
   const admin = createAdminClient();
   const { data: managers } = await admin.from("profiles").select("id").eq("role", "manager");
@@ -175,14 +175,20 @@ export async function decideBrand(
   if (!isManager(actingUser)) throw new ForbiddenError("Only managers can decide on brands");
   const supabase = await createClient();
   const update: BrandUpdate = { status: decision.status, approved_by: actingUser.id };
-  if (decision.name) update.name = decision.name.trim();
+  if (decision.name) {
+    const trimmed = decision.name.trim();
+    const duplicate = await findBrandByName(supabase, trimmed, brandId);
+    if (duplicate) throw new Error(`A brand named "${duplicate.name}" already exists`);
+    update.name = trimmed;
+  }
   const { data, error } = await supabase
     .from("brands")
     .update(update)
     .eq("id", brandId)
     .select()
     .single();
-  const brand = single(data, error);
+  if (error) throw friendlyBrandInsertError(error);
+  const brand = data as Brand;
 
   const admin = createAdminClient();
   await admin.from("notifications").insert({
@@ -200,13 +206,16 @@ export async function renameBrand(actingUser: Profile, id: string, name: string)
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Brand name is required");
   const supabase = await createClient();
+  const duplicate = await findBrandByName(supabase, trimmed, id);
+  if (duplicate) throw new Error(`A brand named "${duplicate.name}" already exists`);
   const { data, error } = await supabase
     .from("brands")
     .update({ name: trimmed })
     .eq("id", id)
     .select()
     .single();
-  return single(data, error);
+  if (error) throw friendlyBrandInsertError(error);
+  return data as Brand;
 }
 
 export async function deleteBrand(actingUser: Profile, id: string): Promise<void> {
@@ -226,7 +235,7 @@ export async function addApprovedBrand(actingUser: Profile, name: string): Promi
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Brand name is required");
   const supabase = await createClient();
-  const duplicate = await findRecentDuplicateBrand(supabase, trimmed, actingUser.id);
+  const duplicate = await findBrandByName(supabase, trimmed);
   if (duplicate) return duplicate;
 
   const { data, error } = await supabase
@@ -234,7 +243,8 @@ export async function addApprovedBrand(actingUser: Profile, name: string): Promi
     .insert({ name: trimmed, status: "approved", requested_by: actingUser.id, approved_by: actingUser.id })
     .select()
     .single();
-  return single(data, error);
+  if (error) throw friendlyBrandInsertError(error);
+  return data as Brand;
 }
 
 // ---------- Holidays (per office) ----------
