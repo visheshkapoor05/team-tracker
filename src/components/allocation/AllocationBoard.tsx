@@ -89,12 +89,16 @@ function summarizeAllocation({
   );
 
   const projectMap: Record<string, number> = {};
+  // Keyed by name, not brand_id — duplicate brand records that share a name
+  // (e.g. the same brand requested and approved more than once) must still
+  // collapse into one row instead of appearing as separate entries.
   const brandHoursMap: Record<string, number> = {};
   for (const e of relevantEntries) {
     const task = tasksById[e.task_id];
     if (!task) continue;
     projectMap[task.project_id] = (projectMap[task.project_id] ?? 0) + e.hours;
-    brandHoursMap[task.brand_id] = (brandHoursMap[task.brand_id] ?? 0) + e.hours;
+    const brand = brandName(task.brand_id);
+    brandHoursMap[brand] = (brandHoursMap[brand] ?? 0) + e.hours;
   }
   const projectTotals = Object.entries(projectMap)
     .map(([id, hours]) => ({ name: projectName(id), hours }))
@@ -105,7 +109,7 @@ function summarizeAllocation({
   const benchHours = Math.max(0, totalWorkingHours - totalBrandHours - totalLeaveHours);
 
   const brandRows = Object.entries(brandHoursMap)
-    .map(([id, hours]) => ({ name: brandName(id), hours }))
+    .map(([name, hours]) => ({ name, hours }))
     .sort((a, b) => b.hours - a.hours);
   brandRows.push({ name: "Leave", hours: totalLeaveHours });
   brandRows.push({ name: "Bench", hours: benchHours });
@@ -256,7 +260,7 @@ export function AllocationBoard({
     [canViewAll, profiles, monthEntries, monthLeaves, tasksById, workingHoursByProfile, brandName, projectName]
   );
 
-  const brandKeys = useMemo(() => brands.map((b) => b.name), [brands]);
+  const brandKeys = useMemo(() => [...new Set(brands.map((b) => b.name))], [brands]);
 
   const employeeRows = useMemo(() => {
     return profiles.map((profile) => {
@@ -304,23 +308,27 @@ export function AllocationBoard({
     return map;
   }, [monthEntries, tasksById]);
 
+  // Keyed by name, same as summarizeAllocation's brandHoursMap — duplicate
+  // brand records sharing a name must collapse into one column.
   const employeeBrandHours = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
     for (const e of monthEntries) {
       const task = tasksById[e.task_id];
       if (!task) continue;
       const row = (map[task.owner_id] ??= {});
-      row[task.brand_id] = (row[task.brand_id] ?? 0) + e.hours;
+      const name = brandName(task.brand_id);
+      row[name] = (row[name] ?? 0) + e.hours;
     }
     return map;
-  }, [monthEntries, tasksById]);
+  }, [monthEntries, tasksById, brandName]);
 
   const projectColumns = useMemo(
     () => [...projects].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name })),
     [projects]
   );
   const brandColumns = useMemo(
-    () => [...brands].sort((a, b) => a.name.localeCompare(b.name)).map((b) => ({ id: b.id, name: b.name })),
+    () =>
+      [...new Set(brands.map((b) => b.name))].sort((a, b) => a.localeCompare(b)).map((name) => ({ id: name, name })),
     [brands]
   );
 
