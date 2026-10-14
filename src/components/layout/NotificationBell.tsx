@@ -62,6 +62,12 @@ export function NotificationBell({ userId }: { userId: string }) {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  async function markAllRead() {
+    if (unreadCount === 0) return;
+    await fetch("/api/notifications", { method: "PATCH" });
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  }
+
   async function openNotification(n: Notification) {
     await fetch(`/api/notifications/${n.id}`, { method: "PATCH" });
     setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
@@ -93,8 +99,18 @@ export function NotificationBell({ userId }: { userId: string }) {
         </button>
         {open && (
           <div className="absolute right-0 z-30 mt-2 max-h-96 w-80 overflow-y-auto rounded-lg border border-line bg-surface py-1 shadow-lg">
-            <div className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted">
-              Notifications
+            <div className="flex items-center justify-between px-3 py-1.5">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted">
+                Notifications
+              </span>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                >
+                  Mark all read
+                </button>
+              )}
             </div>
             {notifications.length === 0 && (
               <div className="px-3 py-6 text-center text-sm text-muted">
